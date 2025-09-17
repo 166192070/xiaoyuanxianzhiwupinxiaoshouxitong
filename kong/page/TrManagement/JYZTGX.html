@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>交易状态更新跟踪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#10b981',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            neutral: '#64748b',
+            'neutral-light': '#f1f5f9',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .status-line {
+        @apply absolute h-full w-0.5 bg-gray-200 left-5 top-0 z-0;
+      }
+      .status-line-active {
+        @apply bg-primary;
+      }
+      .status-dot {
+        @apply absolute w-3 h-3 rounded-full bg-gray-300 left-[9px] z-10 transition-all duration-500;
+      }
+      .status-dot-active {
+        @apply bg-primary scale-150;
+      }
+      .status-dot-completed {
+        @apply bg-secondary;
+      }
+      .status-content {
+        @apply ml-10 pb-8 relative pl-4 transition-all duration-300;
+      }
+      .status-content-active {
+        @apply font-medium text-primary border-l-2 border-primary;
+      }
+      .status-content-completed {
+        @apply text-gray-600;
+      }
+      .btn-transition {
+        @apply transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <!-- 页面标题 -->
+  <header class="mb-10 text-center">
+    <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-gray-800 mb-2">交易状态跟踪系统</h1>
+    <p class="text-gray-600 max-w-2xl mx-auto">实时监控交易状态流转，自动处理异常情况，确保交易顺利完成</p>
+  </header>
+
+  <!-- 交易信息卡片 -->
+  <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+      <div>
+        <h2 class="text-xl font-bold mb-1">交易 #TRX-7829456</h2>
+        <p class="text-gray-500">创建时间: 2023-06-15 09:32:45</p>
+      </div>
+      <div class="mt-4 md:mt-0 bg-neutral-light px-4 py-2 rounded-full flex items-center">
+        <span id="current-status-label" class="font-medium text-primary">当前状态: 待支付</span>
+        <span id="status-timer" class="ml-4 text-sm text-neutral hidden"></span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div class="bg-neutral-light rounded-lg p-3">
+        <p class="text-gray-500 mb-1">买家信息</p>
+        <p class="font-medium">张先生 (138****5678)</p>
+      </div>
+      <div class="bg-neutral-light rounded-lg p-3">
+        <p class="text-gray-500 mb-1">商品信息</p>
+        <p class="font-medium">高级无线耳机 x 1</p>
+      </div>
+      <div class="bg-neutral-light rounded-lg p-3">
+        <p class="text-gray-500 mb-1">交易金额</p>
+        <p class="font-medium text-primary">¥ 899.00</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 状态流转时间线 -->
+  <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+    <h2 class="text-xl font-bold mb-6 flex items-center">
+      <i class="fa fa-history text-primary mr-2"></i> 交易状态流转
+    </h2>
+
+    <div class="relative">
+      <!-- 状态线 -->
+      <div class="status-line" id="status-progress-line"></div>
+
+      <!-- 待支付 -->
+      <div class="relative py-1" id="status-pending-payment">
+        <div class="status-dot status-dot-active" style="top: 15px;"></div>
+        <div class="status-content status-content-active">
+          <h3 class="font-bold text-lg">待支付</h3>
+          <p class="text-gray-500 mb-2">请买家在24小时内完成支付，超时订单将自动取消</p>
+          <p class="text-sm text-gray-400" id="pending-payment-time">状态更新于: 刚刚</p>
+          <button class="mt-3 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg btn-transition" onclick="updateStatus('paid')">
+            <i class="fa fa-credit-card mr-1"></i> 买家完成支付
+          </button>
+        </div>
+      </div>
+
+      <!-- 买家支付 -->
+      <div class="relative py-1" id="status-paid">
+        <div class="status-dot" style="top: 15px;"></div>
+        <div class="status-content">
+          <h3 class="font-bold text-lg">买家已支付</h3>
+          <p class="text-gray-500 mb-2">款项已暂存平台，等待卖家发货</p>
+          <p class="text-sm text-gray-400" id="paid-time">状态更新于: --</p>
+          <button class="mt-3 bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-lg btn-transition" onclick="updateStatus('shipping')" disabled>
+            <i class="fa fa-truck mr-1"></i> 卖家发货
+          </button>
+        </div>
+      </div>
+
+      <!-- 待收货 -->
+      <div class="relative py-1" id="status-shipping">
+        <div class="status-dot" style="top: 15px;"></div>
+        <div class="status-content">
+          <h3 class="font-bold text-lg">待收货</h3>
+          <p class="text-gray-500 mb-2">商品已发出，等待买家确认收货</p>
+          <div id="shipping-details" class="hidden bg-neutral-light p-3 rounded-lg text-sm mb-2">
+            <p><span class="font-medium">物流信息:</span> 顺丰速运 SF1234567890</p>
+            <p><span class="font-medium">预计送达:</span> 2023-06-18</p>
+          </div>
+          <p class="text-sm text-gray-400" id="shipping-time">状态更新于: --</p>
+          <button class="mt-3 bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-lg btn-transition" onclick="updateStatus('completed')" disabled>
+            <i class="fa fa-check-circle mr-1"></i> 买家确认收货
+          </button>
+        </div>
+      </div>
+
+      <!-- 交易完成 -->
+      <div class="relative py-1" id="status-completed">
+        <div class="status-dot" style="top: 15px;"></div>
+        <div class="status-content">
+          <h3 class="font-bold text-lg">交易完成</h3>
+          <p class="text-gray-500 mb-2">款项已划转至卖家账户，感谢您的交易</p>
+          <p class="text-sm text-gray-400" id="completed-time">状态更新于: --</p>
+        </div>
+      </div>
+
+      <!-- 系统自动确认 -->
+      <div class="relative py-1" id="status-auto-completed">
+        <div class="status-dot" style="top: 15px;"></div>
+        <div class="status-content">
+          <h3 class="font-bold text-lg">系统自动确认</h3>
+          <p class="text-gray-500 mb-2">买家超过7天未确认收货，系统自动完成交易</p>
+          <p class="text-sm text-gray-400" id="auto-completed-time">状态更新于: --</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 状态变更记录 -->
+  <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+    <h2 class="text-xl font-bold mb-6 flex items-center">
+      <i class="fa fa-list-alt text-primary mr-2"></i> 状态变更记录
+    </h2>
+
+    <div class="space-y-4 max-h-60 overflow-y-auto pr-2" id="status-log">
+      <div class="flex items-start">
+        <div class="bg-primary/10 p-2 rounded-full text-primary mt-1">
+          <i class="fa fa-clock-o"></i>
+        </div>
+        <div class="ml-4">
+          <p class="font-medium">交易创建</p>
+          <p class="text-sm text-gray-500">订单 #TRX-7829456 创建，等待买家支付</p>
+          <p class="text-xs text-gray-400 mt-1">2023-06-15 09:32:45</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 异常处理演示 -->
+  <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+    <h2 class="text-xl font-bold mb-4 flex items-center">
+      <i class="fa fa-exclamation-triangle text-warning mr-2"></i> 异常处理演示
+    </h2>
+
+    <p class="text-gray-600 mb-4">模拟买家超过7天未确认收货的场景，系统将自动确认并划转款项</p>
+
+    <button class="bg-warning hover:bg-warning/90 text-white px-4 py-2 rounded-lg btn-transition" onclick="simulateAutoComplete()">
+      <i class="fa fa-play-circle mr-1"></i> 模拟7天后系统自动确认
+    </button>
+  </div>
+</div>
+
+<footer class="bg-gray-800 text-white py-8 mt-12">
+  <div class="container mx-auto px-4 text-center">
+    <p>交易状态跟踪系统 &copy; 2023</p>
+    <p class="text-gray-400 text-sm mt-2">完整的交易流程管理与异常处理机制</p>
+  </div>
+</footer>
+
+<script>
+  // 当前状态
+  let currentStatus = 'pending-payment'; // pending-payment, paid, shipping, completed, auto-completed
+  let statusTimer = null;
+  let countdownSeconds = 24 * 60 * 60; // 24小时，用于待支付状态
+
+  // 状态配置
+  const statusConfig = {
+    'pending-payment': {
+      label: '待支付',
+      next: 'paid',
+      color: 'primary'
+    },
+    'paid': {
+      label: '买家已支付',
+      next: 'shipping',
+      color: 'primary'
+    },
+    'shipping': {
+      label: '待收货',
+      next: 'completed',
+      color: 'warning'
+    },
+    'completed': {
+      label: '交易完成',
+      next: null,
+      color: 'secondary'
+    },
+    'auto-completed': {
+      label: '系统自动确认',
+      next: null,
+      color: 'secondary'
+    }
+  };
+
+  // 初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    updateStatusUI();
+    startPendingPaymentTimer();
+  });
+
+  // 更新状态
+  function updateStatus(status) {
+    // 检查状态是否有效且是下一个状态
+    if (!statusConfig[status] || (currentStatus !== statusConfig[status].previous &&
+      status !== statusConfig[currentStatus].next)) {
+      return;
+    }
+
+    // 停止当前计时器
+    if (statusTimer) {
+      clearInterval(statusTimer);
+      statusTimer = null;
+      document.getElementById('status-timer').classList.add('hidden');
+    }
+
+    // 更新当前状态
+    currentStatus = status;
+
+    // 记录状态变更
+    logStatusChange(status);
+
+    // 更新UI
+    updateStatusUI();
+
+    // 启动相应的计时器
+    if (status === 'shipping') {
+      startShippingTimer();
+    }
+  }
+
+  // 更新状态UI
+  function updateStatusUI() {
+    // 更新当前状态标签
+    const statusLabel = document.getElementById('current-status-label');
+    statusLabel.textContent = `当前状态: ${statusConfig[currentStatus].label}`;
+    statusLabel.className = `font-medium text-${statusConfig[currentStatus].color}`;
+
+    // 更新时间线状态
+    Object.keys(statusConfig).forEach(status => {
+      const statusEl = document.getElementById(`status-${status}`);
+      const dotEl = statusEl.querySelector('.status-dot');
+      const contentEl = statusEl.querySelector('.status-content');
+      const buttonEl = contentEl.querySelector('button');
+
+      // 重置所有状态
+      dotEl.classList.remove('status-dot-active', 'status-dot-completed');
+      contentEl.classList.remove('status-content-active', 'status-content-completed');
+
+      if (status === currentStatus) {
+        // 当前状态
+        dotEl.classList.add('status-dot-active');
+        contentEl.classList.add('status-content-active');
+        if (buttonEl) buttonEl.disabled = false;
+      } else if (getStatusOrder(status) < getStatusOrder(currentStatus) &&
+        status !== 'auto-completed') {
+        // 已完成状态
+        dotEl.classList.add('status-dot-completed');
+        contentEl.classList.add('status-content-completed');
+        if (buttonEl) buttonEl.disabled = true;
+      } else {
+        // 未完成状态
+        if (buttonEl) buttonEl.disabled = true;
+      }
+
+      // 特殊处理自动确认状态
+      if (currentStatus === 'auto-completed') {
+        document.getElementById('status-completed').classList.add('hidden');
+      } else {
+        document.getElementById('status-auto-completed').classList.add('hidden');
+      }
+    });
+
+    // 更新进度线
+    updateProgressLine();
+
+    // 如果是发货状态，显示物流信息
+    if (currentStatus === 'shipping') {
+      document.getElementById('shipping-details').classList.remove('hidden');
+    }
+  }
+
+  // 更新进度线
+  function updateProgressLine() {
+    const lineEl = document.getElementById('status-progress-line');
+    const totalSteps = Object.keys(statusConfig).length - 1; // 减去auto-completed
+    const currentStep = getStatusOrder(currentStatus);
+    const progress = (currentStep / totalSteps) * 100;
+
+    lineEl.style.height = `${progress}%`;
+    lineEl.classList.add('status-line-active');
+  }
+
+  // 获取状态顺序
+  function getStatusOrder(status) {
+    const order = {
+      'pending-payment': 1,
+      'paid': 2,
+      'shipping': 3,
+      'completed': 4,
+      'auto-completed': 4
+    };
+    return order[status] || 0;
+  }
+
+  // 记录状态变更
+  function logStatusChange(status) {
+    const now = new Date();
+    const timeStr = now.toLocaleString();
+    const logContainer = document.getElementById('status-log');
+
+    // 更新状态时间
+    document.getElementById(`${status}-time`).textContent = `状态更新于: ${timeStr}`;
+
+    // 添加到日志
+    const statusLabels = {
+      'pending-payment': '待支付',
+      'paid': '买家已支付',
+      'shipping': '待收货',
+      'completed': '交易完成',
+      'auto-completed': '系统自动确认'
+    };
+
+    const logEntry = document.createElement('div');
+    logEntry.className = 'flex items-start';
+    logEntry.innerHTML = `
+                <div class="bg-${statusConfig[status].color}/10 p-2 rounded-full text-${statusConfig[status].color} mt-1">
+                    <i class="fa fa-check"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="font-medium">${statusLabels[status]}</p>
+                    <p class="text-sm text-gray-500">${getStatusDescription(status)}</p>
+                    <p class="text-xs text-gray-400 mt-1">${timeStr}</p>
+                </div>
+            `;
+
+    logContainer.prepend(logEntry);
+  }
+
+  // 获取状态描述
+  function getStatusDescription(status) {
+    const descriptions = {
+      'pending-payment': '订单创建，等待买家支付',
+      'paid': '买家已完成支付，等待卖家发货',
+      'shipping': '卖家已发货，等待买家确认收货',
+      'completed': '买家已确认收货，交易完成',
+      'auto-completed': '买家超过7天未确认，系统自动完成交易'
+    };
+    return descriptions[status] || '';
+  }
+
+  // 启动待支付计时器
+  function startPendingPaymentTimer() {
+    if (currentStatus !== 'pending-payment') return;
+
+    const timerEl = document.getElementById('status-timer');
+    timerEl.classList.remove('hidden');
+
+    statusTimer = setInterval(() => {
+      countdownSeconds--;
+
+      if (countdownSeconds <= 0) {
+        clearInterval(statusTimer);
+        // 这里可以添加超时未支付的处理逻辑
+        timerEl.textContent = '支付已超时';
+        return;
+      }
+
+      // 格式化时间
+      const hours = Math.floor(countdownSeconds / 3600);
+      const minutes = Math.floor((countdownSeconds % 3600) / 60);
+      const seconds = countdownSeconds % 60;
+
+      timerEl.textContent = `剩余支付时间: ${hours}时${minutes}分${seconds}秒`;
+    }, 1000);
+  }
+
+  // 启动收货计时器（7天）
+  function startShippingTimer() {
+    const sevenDaysInSeconds = 7 * 24 * 60 * 60;
+    let remainingSeconds = sevenDaysInSeconds;
+
+    const timerEl = document.getElementById('status-timer');
+    timerEl.classList.remove('hidden');
+
+    statusTimer = setInterval(() => {
+      remainingSeconds--;
+
+      if (remainingSeconds <= 0) {
+        clearInterval(statusTimer);
+        // 自动确认收货
+        updateStatus('auto-completed');
+        return;
+      }
+
+      // 格式化时间
+      const days = Math.floor(remainingSeconds / (24 * 60 * 60));
+      const hours = Math.floor((remainingSeconds % (24 * 60 * 60)) / 3600);
+
+      timerEl.textContent = `自动确认倒计时: ${days}天${hours}时`;
+    }, 1000);
+  }
+
+  // 模拟7天后系统自动确认
+  function simulateAutoComplete() {
+    if (currentStatus !== 'shipping') {
+      alert('请先将状态更新至"待收货"');
+      return;
+    }
+
+    // 停止当前计时器
+    if (statusTimer) {
+      clearInterval(statusTimer);
+      statusTimer = null;
+    }
+
+    // 显示模拟提示
+    alert('模拟7天时间已过，系统将自动确认收货');
+
+    // 更新为自动确认状态
+    updateStatus('auto-completed');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>发布评价</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#6B7280',
+            accent: '#F59E0B',
+            danger: '#EF4444',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .star-active {
+        color: #F59E0B;
+      }
+      .star-inactive {
+        color: #D1D5DB;
+      }
+      .transition-transform {
+        transition: transform 0.2s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.1);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+  <header class="mb-8">
+    <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800 mb-2">发布评价</h1>
+    <p class="text-gray-600">请对本次交易体验进行评价，帮助其他买家做出更明智的选择</p>
+  </header>
+
+  <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <form id="ratingForm" class="space-y-8">
+      <!-- 物品描述准确性 -->
+      <div class="rating-section">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">物品描述准确性</h2>
+        <div class="flex items-center space-x-2 mb-2">
+          <div class="stars flex space-x-1" data-category="description">
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="1"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="2"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="3"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="4"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="5"></i>
+          </div>
+          <span class="ml-3 text-gray-600 rating-text">请选择评分</span>
+        </div>
+        <p class="text-sm text-gray-500">1星表示严重不符，5星表示完全一致</p>
+      </div>
+
+      <!-- 沟通态度 -->
+      <div class="rating-section">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">卖家沟通态度</h2>
+        <div class="flex items-center space-x-2 mb-2">
+          <div class="stars flex space-x-1" data-category="communication">
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="1"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="2"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="3"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="4"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="5"></i>
+          </div>
+          <span class="ml-3 text-gray-600 rating-text">请选择评分</span>
+        </div>
+        <p class="text-sm text-gray-500">1星表示态度恶劣，5星表示非常友好</p>
+      </div>
+
+      <!-- 发货及时性 -->
+      <div class="rating-section">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">发货及时性</h2>
+        <div class="flex items-center space-x-2 mb-2">
+          <div class="stars flex space-x-1" data-category="shipping">
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="1"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="2"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="3"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="4"></i>
+            <i class="fa fa-star text-2xl star-inactive hover-scale cursor-pointer" data-value="5"></i>
+          </div>
+          <span class="ml-3 text-gray-600 rating-text">请选择评分</span>
+        </div>
+        <p class="text-sm text-gray-500">1星表示严重延迟，5星表示非常及时</p>
+      </div>
+
+      <!-- 文字评价 -->
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">文字评价（选填）</h2>
+        <textarea
+          id="reviewText"
+          rows="4"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition duration-200"
+          placeholder="分享您的交易体验，帮助其他买家（10-100个字符）"
+          maxlength="100"
+        ></textarea>
+        <div class="flex justify-between mt-2">
+          <p class="text-sm text-gray-500">请遵守评价规范，禁止发布辱骂、虚假等违规内容</p>
+          <span id="charCount" class="text-sm text-gray-500">0/100</span>
+        </div>
+      </div>
+
+      <!-- 提交按钮 -->
+      <div class="pt-4">
+        <button
+          type="submit"
+          id="submitBtn"
+          class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          提交评价
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 评价规则 -->
+  <div class="bg-blue-50 border-l-4 border-primary p-4 rounded-r-lg">
+    <h3 class="font-semibold text-primary mb-2">评价规则</h3>
+    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+      <li>交易完成后，买家可对卖家进行评价</li>
+      <li>不可发布辱骂、虚假等违规内容</li>
+      <li>管理员可删除违规评价并通知评价者</li>
+      <li>评价提交后将公开展示，供其他用户参考</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 成功提示弹窗 -->
+<div id="successModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all">
+    <div class="text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa fa-check text-2xl text-green-500"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">评价提交成功</h3>
+      <p class="text-gray-600 mb-6">感谢您的评价，您的反馈将帮助其他买家做出更明智的选择</p>
+      <button id="closeModal" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-lg transition duration-200">
+        完成
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 获取元素
+    const stars = document.querySelectorAll('.stars i');
+    const ratingTexts = document.querySelectorAll('.rating-text');
+    const reviewText = document.getElementById('reviewText');
+    const charCount = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const ratingForm = document.getElementById('ratingForm');
+    const successModal = document.getElementById('successModal');
+    const closeModal = document.getElementById('closeModal');
+
+    // 存储评分的对象
+    const ratings = {
+      description: 0,
+      communication: 0,
+      shipping: 0
+    };
+
+    // 评分描述
+    const ratingDescriptions = {
+      1: "很差",
+      2: "较差",
+      3: "一般",
+      4: "良好",
+      5: "优秀"
+    };
+
+    // 处理星级评分
+    stars.forEach(star => {
+      star.addEventListener('mouseover', function() {
+        const value = this.getAttribute('data-value');
+        const category = this.parentElement.getAttribute('data-category');
+        highlightStars(category, value);
+      });
+
+      star.addEventListener('mouseout', function() {
+        const category = this.parentElement.getAttribute('data-category');
+        const currentRating = ratings[category];
+        highlightStars(category, currentRating);
+      });
+
+      star.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        const category = this.parentElement.getAttribute('data-category');
+        ratings[category] = value;
+
+        // 更新评分文本
+        const textElement = this.parentElement.nextElementSibling;
+        textElement.textContent = `${value}星 - ${ratingDescriptions[value]}`;
+        textElement.classList.add('text-accent', 'font-medium');
+
+        checkSubmitEnabled();
+      });
+    });
+
+    // 高亮星星
+    function highlightStars(category, value) {
+      const categoryStars = document.querySelectorAll(`.stars[data-category="${category}"] i`);
+
+      categoryStars.forEach(star => {
+        const starValue = star.getAttribute('data-value');
+        if (starValue <= value) {
+          star.classList.remove('star-inactive');
+          star.classList.add('star-active');
+        } else {
+          star.classList.remove('star-active');
+          star.classList.add('star-inactive');
+        }
+      });
+    }
+
+    // 字符计数
+    reviewText.addEventListener('input', function() {
+      const length = this.value.length;
+      charCount.textContent = `${length}/100`;
+
+      // 检查字符数是否在有效范围内
+      if (length > 0 && (length < 10 || length > 100)) {
+        charCount.classList.add('text-danger');
+      } else {
+        charCount.classList.remove('text-danger');
+      }
+
+      checkSubmitEnabled();
+    });
+
+    // 检查提交按钮是否可点击
+    function checkSubmitEnabled() {
+      // 检查所有评分是否已完成
+      const allRated = Object.values(ratings).every(rating => rating > 0);
+
+      // 检查文字评价（如果填写）是否符合长度要求
+      const textValid = reviewText.value.length === 0 ||
+        (reviewText.value.length >= 10 && reviewText.value.length <= 100);
+
+      submitBtn.disabled = !(allRated && textValid);
+    }
+
+    // 表单提交
+    ratingForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // 模拟表单提交
+      const formData = {
+        description: ratings.description,
+        communication: ratings.communication,
+        shipping: ratings.shipping,
+        reviewText: reviewText.value.trim()
+      };
+
+      console.log('提交的评价数据:', formData);
+
+      // 显示成功弹窗
+      successModal.classList.remove('hidden');
+
+      // 重置表单（实际应用中可能会跳转到其他页面）
+      resetForm();
+    });
+
+    // 关闭弹窗
+    closeModal.addEventListener('click', function() {
+      successModal.classList.add('hidden');
+    });
+
+    // 重置表单
+    function resetForm() {
+      // 重置评分
+      Object.keys(ratings).forEach(category => {
+        ratings[category] = 0;
+        highlightStars(category, 0);
+        const textElement = document.querySelector(`.stars[data-category="${category}"]`).nextElementSibling;
+        textElement.textContent = "请选择评分";
+        textElement.classList.remove('text-accent', 'font-medium');
+      });
+
+      // 重置文字评价
+      reviewText.value = '';
+      charCount.textContent = '0/100';
+      charCount.classList.remove('text-danger');
+
+      // 禁用提交按钮
+      submitBtn.disabled = true;
+    }
+  });
+</script>
+</body>
+</html>

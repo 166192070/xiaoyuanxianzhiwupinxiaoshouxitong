@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户查询系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            neutral: '#F5F7FA',
+            dark: '#1D2129',
+            danger: '#F53F3F',
+            success: '#00B42A'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .transition-height {
+        transition: max-height 0.3s ease-in-out;
+      }
+    }
+  </style>
+</head>
+<body class="bg-neutral font-inter text-dark min-h-screen flex flex-col">
+<!-- 顶部导航栏 -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <i class="fa fa-users text-primary text-2xl"></i>
+      <h1 class="text-xl font-bold text-primary">用户管理系统</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="hidden md:flex items-center space-x-2">
+        <span id="current-user" class="font-medium">管理员</span>
+        <img src="https://picsum.photos/id/1005/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+      </div>
+      <button id="theme-toggle" class="p-2 rounded-full hover:bg-neutral transition-colors">
+        <i class="fa fa-moon-o"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- 主内容区 -->
+<main class="flex-grow container mx-auto px-4 py-8">
+  <!-- 页面标题和权限切换 -->
+  <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div>
+      <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold mb-2">用户查询</h2>
+      <p class="text-gray-500">根据权限查询和查看用户信息</p>
+    </div>
+    <div class="mt-4 md:mt-0 flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200">
+      <span class="text-gray-600">当前权限：</span>
+      <div class="relative inline-block w-14">
+        <select id="permission-selector" class="block appearance-none w-full bg-transparent border-none text-sm font-medium text-gray-700 pr-8 focus:outline-none focus:ring-0">
+          <option value="admin">管理员</option>
+          <option value="user">普通用户</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+          <i class="fa fa-chevron-down text-xs"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员查询条件区域 -->
+  <div id="admin-filters" class="bg-white rounded-xl p-6 mb-8 card-shadow transition-all duration-300">
+    <h3 class="text-lg font-semibold mb-4 flex items-center">
+      <i class="fa fa-filter text-primary mr-2"></i>查询条件
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+        <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-user"></i>
+                        </span>
+          <input type="text" id="name" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" placeholder="请输入姓名">
+        </div>
+      </div>
+      <div>
+        <label for="department" class="block text-sm font-medium text-gray-700 mb-1">院系</label>
+        <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-building"></i>
+                        </span>
+          <select id="department" class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none bg-white">
+            <option value="">全部院系</option>
+            <option>软件学院</option>
+            <option>机电工程学院</option>
+            <option>机械工程学院</option>
+            <option>材料科学与工程学院</option>
+            <option>化学与化工学院</option>
+            <option>信息与通信工程学院</option>
+            <option>仪器与电子学院</option>
+            <option>计算机科学与技术(大数据)学院</option>
+            <option>数学学院</option>
+            <option>经济与管理学院</option>
+            <option>人文社会科学学院</option>
+            <option>艺术学院</option>
+            <option>电气与控制工程学院</option>
+            <option>航空宇航学院</option>
+            <option>马克思主义学院</option>
+            <option>国际教育学院</option>
+            <option>创新创业学院</option>
+            <option>研究生院</option>
+            <option>继续教育学院</option>
+            <option>电力学院</option>
+            <option>环境与安全工程学院</option>
+            <option>半导体与物理学院</option>
+            <option>能源与动力工程学院</option>
+            <option>体育学院</option>
+          </select>
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 pointer-events-none">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </span>
+        </div>
+      </div>
+      <div>
+        <label for="major" class="block text-sm font-medium text-gray-700 mb-1">专业</label>
+        <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-graduation-cap"></i>
+                        </span>
+          <input type="text" id="major" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" placeholder="请输入专业">
+        </div>
+      </div>
+      <div>
+        <label for="class" class="block text-sm font-medium text-gray-700 mb-1">班级</label>
+        <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-users"></i>
+                        </span>
+          <input type="text" id="class" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" placeholder="请输入班级">
+        </div>
+      </div>
+      <div>
+        <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">年级</label>
+        <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+          <select id="grade" class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none bg-white">
+            <option value="">全部年级</option>
+            <option value="2020">2020级</option>
+            <option value="2021">2021级</option>
+            <option value="2022">2022级</option>
+            <option value="2023">2023级</option>
+            <option value="2024">2024级</option>
+            <option value="2025">2025级</option>
+          </select>
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 pointer-events-none">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </span>
+        </div>
+      </div>
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">用户状态</label>
+        <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-check-circle"></i>
+                        </span>
+          <select id="status" class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all appearance-none bg-white">
+            <option value="">全部状态</option>
+            <option value="active">正常</option>
+            <option value="inactive">未激活</option>
+            <option value="banned">已禁用</option>
+          </select>
+          <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 pointer-events-none">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </span>
+        </div>
+      </div>
+    </div>
+    <div class="mt-6 flex justify-end space-x-3">
+      <button id="reset-btn" class="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center">
+        <i class="fa fa-refresh mr-2"></i>重置
+      </button>
+      <button id="search-btn" class="px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center shadow-sm">
+        <i class="fa fa-search mr-2"></i>查询
+      </button>
+    </div>
+  </div>
+
+  <!-- 普通用户视图 (默认隐藏) -->
+  <div id="user-view" class="hidden bg-white rounded-xl p-6 mb-8 card-shadow">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-semibold flex items-center">
+        <i class="fa fa-user-circle text-primary mr-2"></i>个人信息
+      </h3>
+      <button class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors">
+        <i class="fa fa-edit mr-1"></i>编辑信息
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="flex flex-col">
+        <div class="flex items-center mb-6">
+          <img src="https://picsum.photos/id/1012/100/100" alt="用户头像" class="w-20 h-20 rounded-full object-cover border-2 border-primary">
+          <div class="ml-4">
+            <h4 class="text-xl font-bold">张三</h4>
+            <p class="text-gray-500 text-sm">计算机学院 | 软件工程专业</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex">
+            <span class="w-24 text-gray-500">姓名：</span>
+            <span class="font-medium">张三</span>
+          </div>
+          <div class="flex">
+            <span class="w-24 text-gray-500">院系：</span>
+            <span>计算机学院</span>
+          </div>
+          <div class="flex">
+            <span class="w-24 text-gray-500">专业：</span>
+            <span>软件工程</span>
+          </div>
+          <div class="flex">
+            <span class="w-24 text-gray-500">班级：</span>
+            <span>软件2001班</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4 pt-16">
+        <div class="flex">
+          <span class="w-24 text-gray-500">年级：</span>
+          <span>2020级</span>
+        </div>
+        <div class="flex">
+          <span class="w-24 text-gray-500">手机：</span>
+          <span>13800138000</span>
+        </div>
+        <div class="flex">
+          <span class="w-24 text-gray-500">QQ：</span>
+          <span>123456789</span>
+        </div>
+        <div class="flex">
+          <span class="w-24 text-gray-500">状态：</span>
+          <span><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fa fa-check-circle mr-1"></i>正常
+                        </span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果展示区域 -->
+  <div id="results-container" class="bg-white rounded-xl overflow-hidden card-shadow">
+    <div class="p-6 border-b border-gray-100">
+      <h3 class="text-lg font-semibold flex items-center">
+        <i class="fa fa-list-alt text-primary mr-2"></i>查询结果
+        <span id="result-count" class="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">共 12 条记录</span>
+      </h3>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            姓名
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            院系
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            专业
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            班级
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            年级
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            手机
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            QQ
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            状态
+          </th>
+        </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+        <!-- 表格数据行 -->
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="h-8 w-8 flex-shrink-0">
+                <img class="h-8 w-8 rounded-full" src="https://picsum.photos/id/1001/40/40" alt="用户头像">
+              </div>
+              <div class="ml-3">
+                <div class="text-sm font-medium text-gray-900">张三</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">计算机学院</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">软件工程</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">软件2001班</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">2020级</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">13800138000</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">123456789</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    正常
+                                </span>
+          </td>
+        </tr>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="h-8 w-8 flex-shrink-0">
+                <img class="h-8 w-8 rounded-full" src="https://picsum.photos/id/1002/40/40" alt="用户头像">
+              </div>
+              <div class="ml-3">
+                <div class="text-sm font-medium text-gray-900">李四</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">电子信息学院</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">通信工程</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">通信2102班</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">2021级</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">13900139000</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">987654321</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    正常
+                                </span>
+          </td>
+        </tr>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="h-8 w-8 flex-shrink-0">
+                <img class="h-8 w-8 rounded-full" src="https://picsum.photos/id/1003/40/40" alt="用户头像">
+              </div>
+              <div class="ml-3">
+                <div class="text-sm font-medium text-gray-900">王五</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">商学院</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">会计学</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">会计2201班</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">2022级</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">13700137000</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">456123789</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    未激活
+                                </span>
+          </td>
+        </tr>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="h-8 w-8 flex-shrink-0">
+                <img class="h-8 w-8 rounded-full" src="https://picsum.photos/id/1004/40/40" alt="用户头像">
+              </div>
+              <div class="ml-3">
+                <div class="text-sm font-medium text-gray-900">赵六</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">文学院</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">汉语言文学</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">汉文2301班</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">2023级</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">13600136000</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">789456123</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    已禁用
+                                </span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+      <div class="flex-1 flex justify-between sm:hidden">
+        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          上一页
+        </a>
+        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          下一页
+        </a>
+      </div>
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            显示第 <span class="font-medium">1</span> 到 <span class="font-medium">4</span> 条，共 <span class="font-medium">12</span> 条记录
+          </p>
+        </div>
+        <div>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <span class="sr-only">上一页</span>
+              <i class="fa fa-chevron-left text-xs"></i>
+            </a>
+            <a href="#" aria-current="page" class="z-10 bg-primary text-white relative inline-flex items-center px-4 py-2 border border-primary text-sm font-medium">
+              1
+            </a>
+            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+              2
+            </a>
+            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+              3
+            </a>
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+              12
+            </a>
+            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <span class="sr-only">下一页</span>
+              <i class="fa fa-chevron-right text-xs"></i>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 py-6">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <div class="text-gray-500 text-sm mb-4 md:mb-0">
+        &copy; 2023 用户管理系统 - 版权所有
+      </div>
+      <div class="flex space-x-6">
+        <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+          <i class="fa fa-question-circle"></i> 帮助中心
+        </a>
+        <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+          <i class="fa fa-file-text-o"></i> 使用手册
+        </a>
+        <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+          <i class="fa fa-shield"></i> 隐私政策
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+  // 权限切换逻辑
+  const permissionSelector = document.getElementById('permission-selector');
+  const adminFilters = document.getElementById('admin-filters');
+  const userView = document.getElementById('user-view');
+  const resultsContainer = document.getElementById('results-container');
+  const currentUser = document.getElementById('current-user');
+
+  permissionSelector.addEventListener('change', function() {
+    if (this.value === 'admin') {
+      adminFilters.classList.remove('hidden');
+      resultsContainer.classList.remove('hidden');
+      userView.classList.add('hidden');
+      currentUser.textContent = '管理员';
+    } else {
+      adminFilters.classList.add('hidden');
+      resultsContainer.classList.add('hidden');
+      userView.classList.remove('hidden');
+      currentUser.textContent = '普通用户';
+    }
+  });
+
+  // 查询按钮点击事件
+  document.getElementById('search-btn').addEventListener('click', function() {
+    // 模拟查询加载效果
+    this.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>查询中...';
+    this.disabled = true;
+
+    setTimeout(() => {
+      this.innerHTML = '<i class="fa fa-search mr-2"></i>查询';
+      this.disabled = false;
+
+      // 滚动到结果区域
+      resultsContainer.scrollIntoView({ behavior: 'smooth' });
+    }, 800);
+  });
+
+  // 重置按钮点击事件
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    // 清空所有输入框和选择框
+    document.getElementById('name').value = '';
+    document.getElementById('department').selectedIndex = 0;
+    document.getElementById('major').value = '';
+    document.getElementById('class').value = '';
+    document.getElementById('grade').selectedIndex = 0;
+    document.getElementById('status').selectedIndex = 0;
+  });
+
+  // 主题切换功能
+  const themeToggle = document.getElementById('theme-toggle');
+  let darkMode = false;
+
+  themeToggle.addEventListener('click', function() {
+    darkMode = !darkMode;
+    document.body.classList.toggle('bg-gray-900');
+    document.body.classList.toggle('text-white');
+    document.body.classList.toggle('bg-neutral');
+    document.body.classList.toggle('text-dark');
+
+    if (darkMode) {
+      this.innerHTML = '<i class="fa fa-sun-o"></i>';
+    } else {
+      this.innerHTML = '<i class="fa fa-moon-o"></i>';
+    }
+  });
+</script>
+</body>
+</html>

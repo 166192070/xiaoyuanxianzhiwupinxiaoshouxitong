@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物品查询与筛选</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            neutral: '#6B7280',
+            light: '#F3F4F6',
+            dark: '#1F2937'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .filter-shadow {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark">
+<!-- 导航栏 -->
+<header class="sticky top-0 z-50 bg-white shadow-sm transition-all duration-300">
+  <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <i class="fa fa-shopping-bag text-primary text-2xl"></i>
+      <h1 class="text-xl font-bold text-primary">物品交换平台</h1>
+    </div>
+
+    <div class="hidden md:flex items-center space-x-6">
+      <a href="#" class="text-neutral hover:text-primary transition-colors">首页</a>
+      <a href="#" class="text-primary font-medium">物品浏览</a>
+      <a href="#" class="text-neutral hover:text-primary transition-colors">发布物品</a>
+      <a href="#" class="text-neutral hover:text-primary transition-colors">帮助中心</a>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <button class="hidden md:block px-4 py-2 text-primary border border-primary rounded-full hover:bg-primary/5 transition-colors">
+        登录
+      </button>
+      <button class="px-4 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg">
+        注册
+      </button>
+      <button class="md:hidden text-neutral text-xl">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- 主内容区 -->
+<main class="container mx-auto px-4 py-8">
+  <!-- 页面标题和搜索框 -->
+  <div class="mb-8">
+    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-4">物品查询</h2>
+    <div class="relative max-w-3xl">
+      <input
+        type="text"
+        placeholder="搜索物品名称或描述..."
+        class="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+      >
+      <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-neutral"></i>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-8">
+    <!-- 筛选侧边栏 -->
+    <aside class="w-full lg:w-64 shrink-0">
+      <div class="bg-white rounded-xl p-6 filter-shadow sticky top-24">
+        <h3 class="text-lg font-semibold mb-5 flex items-center">
+          <i class="fa fa-filter text-primary mr-2"></i>筛选条件
+        </h3>
+
+        <!-- 登录提示 -->
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <p class="text-sm text-blue-700 flex items-center">
+            <i class="fa fa-info-circle mr-2"></i>
+            登录后可使用完整筛选功能
+          </p>
+        </div>
+
+        <!-- 品类筛选 -->
+        <div class="mb-6">
+          <h4 class="font-medium mb-3 text-dark">品类</h4>
+          <div class="space-y-2">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">电子产品</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">家居用品</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">服装鞋帽</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">书籍文具</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">运动器材</span>
+            </label>
+          </div>
+          <button class="text-primary text-sm mt-2 hover:underline">更多品类</button>
+        </div>
+
+        <!-- 价格区间筛选 -->
+        <div class="mb-6">
+          <h4 class="font-medium mb-3 text-dark">价格区间</h4>
+          <div class="space-y-2">
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="price" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">0-50元</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="price" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">50-100元</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="price" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">100-300元</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="price" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">300-500元</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="price" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">500元以上</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 新旧程度筛选 -->
+        <div class="mb-6">
+          <h4 class="font-medium mb-3 text-dark">新旧程度</h4>
+          <div class="space-y-2">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">全新</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">几乎全新</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">使用过-良好</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">使用过-一般</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 交易方式筛选 -->
+        <div class="mb-6">
+          <h4 class="font-medium mb-3 text-dark">交易方式</h4>
+          <div class="space-y-2">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">当面交易</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">快递邮寄</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary">
+              <span class="ml-2 text-sm">同城配送</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 距离筛选 -->
+        <div class="mb-6">
+          <h4 class="font-medium mb-3 text-dark">距离</h4>
+          <div class="space-y-2">
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="distance" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">1公里内</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="distance" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">3公里内</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="distance" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">5公里内</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="distance" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">10公里内</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input type="radio" name="distance" class="form-radio h-4 w-4 text-primary focus:ring-primary">
+              <span class="ml-2 text-sm">不限距离</span>
+            </label>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <button class="w-full py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+              定位自提点
+            </button>
+          </div>
+        </div>
+
+        <!-- 筛选按钮 -->
+        <div class="flex space-x-3">
+          <button class="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+            应用筛选
+          </button>
+          <button class="flex-1 py-2 border border-gray-200 text-neutral rounded-lg hover:bg-gray-50 transition-colors">
+            重置
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 物品列表区域 -->
+    <div class="flex-1">
+      <!-- 排序和结果统计 -->
+      <div class="bg-white rounded-xl p-4 mb-6 filter-shadow flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <p class="text-neutral text-sm">找到 <span class="text-primary font-medium">128</span> 个物品</p>
+        </div>
+
+        <div class="flex items-center w-full sm:w-auto">
+          <span class="text-sm text-neutral mr-2">排序方式：</span>
+          <select class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+            <option>最新发布</option>
+            <option>价格从低到高</option>
+            <option>价格从高到低</option>
+            <option>距离从近到远</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 物品列表 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 物品卡片1：无线蓝牙耳机 -->
+        <div class="bg-white rounded-xl overflow-hidden filter-shadow card-hover">
+          <div class="relative">
+            <img src="https://picsum.photos/id/3/400/300" alt="白色真无线蓝牙耳机和充电盒" class="w-full h-48 object-cover">
+            <span class="absolute top-3 left-3 bg-secondary/90 text-white text-xs px-2 py-1 rounded-full">
+              几乎全新
+            </span>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-medium text-lg">无线蓝牙耳机</h3>
+              <span class="text-primary font-bold">¥89</span>
+            </div>
+            <p class="text-neutral text-sm line-clamp-2 mb-3">
+              只用过几次，音质很好，续航约8小时，带充电盒
+            </p>
+            <div class="flex items-center text-xs text-neutral mb-3">
+              <span class="flex items-center mr-3">
+                <i class="fa fa-map-marker mr-1"></i> 2.3公里
+              </span>
+              <span class="flex items-center mr-3">
+                <i class="fa fa-exchange mr-1"></i> 当面交易
+              </span>
+              <span class="flex items-center">
+                <i class="fa fa-clock-o mr-1"></i> 2小时前
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1012/32/32" alt="张先生的头像" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-neutral">张先生</span>
+              </div>
+              <button class="text-primary text-sm hover:underline">查看详情</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 物品卡片2：机械键盘 -->
+        <div class="bg-white rounded-xl overflow-hidden filter-shadow card-hover">
+          <div class="relative">
+            <img src="https://picsum.photos/id/160/400/300" alt="黑色背光机械键盘" class="w-full h-48 object-cover">
+            <span class="absolute top-3 left-3 bg-blue-500/90 text-white text-xs px-2 py-1 rounded-full">
+              全新
+            </span>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-medium text-lg">机械键盘</h3>
+              <span class="text-primary font-bold">¥199</span>
+            </div>
+            <p class="text-neutral text-sm line-clamp-2 mb-3">
+              全新未拆封，青轴，背光可调节，有线连接
+            </p>
+            <div class="flex items-center text-xs text-neutral mb-3">
+              <span class="flex items-center mr-3">
+                <i class="fa fa-map-marker mr-1"></i> 4.7公里
+              </span>
+              <span class="flex items-center mr-3">
+                <i class="fa fa-exchange mr-1"></i> 同城配送
+              </span>
+              <span class="flex items-center">
+                <i class="fa fa-clock-o mr-1"></i> 昨天
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1027/32/32" alt="李女士的头像" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-neutral">李女士</span>
+              </div>
+              <button class="text-primary text-sm hover:underline">查看详情</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 物品卡片3：瑜伽垫 -->
+        <div class="bg-white rounded-xl overflow-hidden filter-shadow card-hover">
+          <div class="relative">
+            <img src="https://picsum.photos/id/26/400/300" alt="彩色瑜伽垫" class="w-full h-48 object-cover">
+            <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-xs px-2 py-1 rounded-full">
+              使用过-良好
+            </span>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-medium text-lg">瑜伽垫</h3>
+              <span class="text-primary font-bold">¥45</span>
+            </div>
+            <p class="text-neutral text-sm line-clamp-2 mb-3">
+              防滑瑜伽垫，厚度8mm，尺寸183x61cm，送瑜伽球
+            </p>
+            <div class="flex items-center text-xs text-neutral mb-3">
+              <span class="flex items-center mr-3">
+                <i class="fa fa-map-marker mr-1"></i> 1.5公里
+              </span>
+              <span class="flex items-center mr-3">
+                <i class="fa fa-exchange mr-1"></i> 当面交易
+              </span>
+              <span class="flex items-center">
+                <i class="fa fa-clock-o mr-1"></i> 3天前
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1000/32/32" alt="王女士的头像" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-neutral">王女士</span>
+              </div>
+              <button class="text-primary text-sm hover:underline">查看详情</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 物品卡片4：Python编程书籍 -->
+        <div class="bg-white rounded-xl overflow-hidden filter-shadow card-hover">
+          <div class="relative">
+            <img src="https://picsum.photos/id/24/400/300" alt="Python编程书籍封面" class="w-full h-48 object-cover">
+            <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-xs px-2 py-1 rounded-full">
+              使用过-良好
+            </span>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-medium text-lg">Python编程书籍</h3>
+              <span class="text-primary font-bold">¥30</span>
+            </div>
+            <p class="text-neutral text-sm line-clamp-2 mb-3">
+              Python编程：从入门到实践，几乎全新，无笔记
+            </p>
+            <div class="flex items-center text-xs text-neutral mb-3">
+              <span class="flex items-center mr-3">
+                <i class="fa fa-map-marker mr-1"></i> 7.2公里
+              </span>
+              <span class="flex items-center mr-3">
+                <i class="fa fa-exchange mr-1"></i> 快递邮寄
+              </span>
+              <span class="flex items-center">
+                <i class="fa fa-clock-o mr-1"></i> 1周前
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1074/32/32" alt="赵同学的头像" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-neutral">赵同学</span>
+              </div>
+              <button class="text-primary text-sm hover:underline">查看详情</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 物品卡片5：折叠自行车 -->
+        <div class="bg-white rounded-xl overflow-hidden filter-shadow card-hover">
+          <div class="relative">
+            <img src="https://picsum.photos/id/1071/400/300" alt="折叠自行车" class="w-full h-48 object-cover">
+            <span class="absolute top-3 left-3 bg-amber-500/90 text-white text-xs px-2 py-1 rounded-full">
+              使用过-良好
+            </span>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-medium text-lg">折叠自行车</h3>
+              <span class="text-primary font-bold">¥450</span>
+            </div>
+            <p class="text-neutral text-sm line-clamp-2 mb-3">
+              20寸折叠自行车，可放进汽车后备箱，使用1年
+            </p>
+            <div class="flex items-center text-xs text-neutral mb-3">
+              <span class="flex items-center mr-3">
+                <i class="fa fa-map-marker mr-1"></i> 5.8公里
+              </span>
+              <span class="flex items-center mr-3">
+                <i class="fa fa-exchange mr-1"></i> 当面交易
+              </span>
+              <span class="flex items-center">
+                <i class="fa fa-clock-o mr-1"></i> 2周前
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1062/32/32" alt="陈先生的头像" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-neutral">陈先生</span>
+              </div>
+              <button class="text-primary text-sm hover:underline">查看详情</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 物品卡片6：微波炉 -->
+        <div class="bg-white rounded-xl overflow-hidden filter-shadow card-hover">
+          <div class="relative">
+            <img src="https://picsum.photos/id/42/400/300" alt="家用微波炉" class="w-full h-48 object-cover">
+            <span class="absolute top-3 left-3 bg-gray-500/90 text-white text-xs px-2 py-1 rounded-full">
+              使用过-一般
+            </span>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-medium text-lg">微波炉</h3>
+              <span class="text-primary font-bold">¥120</span>
+            </div>
+            <p class="text-neutral text-sm line-clamp-2 mb-3">
+              家用微波炉，20升容量，功能正常，使用2年
+            </p>
+            <div class="flex items-center text-xs text-neutral mb-3">
+              <span class="flex items-center mr-3">
+                <i class="fa fa-map-marker mr-1"></i> 9.3公里
+              </span>
+              <span class="flex items-center mr-3">
+                <i class="fa fa-exchange mr-1"></i> 同城配送
+              </span>
+              <span class="flex items-center">
+                <i class="fa fa-clock-o mr-1"></i> 3周前
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <img src="https://picsum.photos/id/1083/32/32" alt="林女士的头像" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-neutral">林女士</span>
+              </div>
+              <button class="text-primary text-sm hover:underline">查看详情</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分页 -->
+      <div class="mt-10 flex justify-center">
+        <nav class="flex items-center space-x-1">
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-neutral hover:border-primary hover:text-primary transition-colors">
+            <i class="fa fa-angle-left"></i>
+          </button>
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white">1</button>
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:border-primary hover:text-primary transition-colors">2</button>
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:border-primary hover:text-primary transition-colors">3</button>
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:border-primary hover:text-primary transition-colors">4</button>
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:border-primary hover:text-primary transition-colors">5</button>
+          <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-neutral hover:border-primary hover:text-primary transition-colors">
+            <i class="fa fa-angle-right"></i>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white mt-16">
+  <div class="container mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center space-x-2 mb-4">
+          <i class="fa fa-shopping-bag text-primary text-2xl"></i>
+          <h3 class="text-xl font-bold">物品交换平台</h3>
+        </div>
+        <p class="text-gray-400 text-sm">
+          让闲置物品流动起来，创造更多价值
+        </p>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-4">快速链接</h4>
+        <ul class="space-y-2 text-gray-400 text-sm">
+          <li><a href="#" class="hover:text-primary transition-colors">首页</a></li>
+          <li><a href="#" class="hover:text-primary transition-colors">物品浏览</a></li>
+          <li><a href="#" class="hover:text-primary transition-colors">发布物品</a></li>
+          <li><a href="#" class="hover:text-primary transition-colors">关于我们</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-4">帮助中心</h4>
+        <ul class="space-y-2 text-gray-400 text-sm">
+          <li><a href="#" class="hover:text-primary transition-colors">新手指南</a></li>
+          <li><a href="#" class="hover:text-primary transition-colors">常见问题</a></li>
+          <li><a href="#" class="hover:text-primary transition-colors">交易规则</a></li>
+          <li><a href="#" class="hover:text-primary transition-colors">联系客服</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-4">关注我们</h4>
+        <div class="flex space-x-4 mb-4">
+          <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors">
+            <i class="fa fa-weixin"></i>
+          </a>
+          <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors">
+            <i class="fa fa-weibo"></i>
+          </a>
+          <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors">
+            <i class="fa fa-qq"></i>
+          </a>
+        </div>
+        <p class="text-gray-400 text-sm">客服电话：400-123-4567</p>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
+      <p>© 2025 物品交换平台 版权所有</p>
+    </div>
+  </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+  // 导航栏滚动效果
+  window.addEventListener('scroll', function() {
+    const header = document.querySelector('header');
+    if (window.scrollY > 50) {
+      header.classList.add('py-2', 'shadow');
+      header.classList.remove('py-3', 'shadow-sm');
+    } else {
+      header.classList.add('py-3', 'shadow-sm');
+      header.classList.remove('py-2', 'shadow');
+    }
+  });
+
+  // 模拟筛选功能
+  document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      // 在实际应用中，这里会触发筛选逻辑
+      console.log('筛选条件已变更');
+    });
+  });
+
+  // 排序下拉菜单变化
+  document.querySelector('select').addEventListener('change', function() {
+    // 在实际应用中，这里会触发排序逻辑
+    console.log('排序方式已变更为：', this.value);
+  });
+
+  // 分页按钮点击
+  document.querySelectorAll('.pagination button').forEach(button => {
+    button.addEventListener('click', function() {
+      // 在实际应用中，这里会触发分页逻辑
+      console.log('切换到页码：', this.textContent.trim() || (this.querySelector('i').classList.contains('fa-angle-left') ? '上一页' : '下一页'));
+    });
+  });
+</script>
+</body>
+</html>

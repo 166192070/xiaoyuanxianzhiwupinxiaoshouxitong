@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>发布物品 - 校园二手交易平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            neutral: '#64748B',
+            light: '#F1F5F9',
+            dark: '#1E293B'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .form-input-focus {
+        @apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
+      }
+      .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg;
+      }
+      .btn-secondary {
+        @apply bg-white border border-gray-300 hover:bg-gray-50 text-dark font-medium py-2 px-6 rounded-lg transition-all duration-300;
+      }
+      .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1.5;
+      }
+      .form-input {
+        @apply w-full rounded-lg border border-gray-300 py-2.5 px-4 text-gray-700 text-sm form-input-focus;
+      }
+      .error-message {
+        @apply text-red-500 text-xs mt-1 hidden;
+      }
+      .image-preview-container {
+        @apply relative border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-wrap gap-3 min-h-[120px] hover:border-primary transition-colors duration-300;
+      }
+      .image-preview {
+        @apply relative w-24 h-24 rounded-md overflow-hidden shadow-md border border-gray-200;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark">
+<!-- 导航栏 -->
+<header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+  <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2">
+      <i class="fa fa-exchange text-primary text-2xl"></i>
+      <span class="text-xl font-bold text-primary">校园易物</span>
+    </a>
+
+    <div class="flex items-center gap-6">
+      <a href="#" class="hidden md:block text-gray-600 hover:text-primary transition-colors">首页</a>
+      <a href="#" class="hidden md:block text-gray-600 hover:text-primary transition-colors">浏览物品</a>
+      <a href="#" class="text-primary font-medium">发布物品</a>
+
+      <!-- 用户信息 -->
+      <div class="flex items-center gap-2">
+        <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary/20">
+        <span class="hidden md:inline text-sm font-medium">张同学</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container mx-auto px-4 py-8 max-w-4xl">
+  <!-- 页面标题 -->
+  <div class="mb-8">
+    <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">发布物品</h1>
+    <p class="text-gray-500 mt-1">填写以下信息发布您的闲置物品</p>
+  </div>
+
+  <!-- 进度指示器 -->
+  <div class="flex items-center justify-between mb-10 relative">
+    <div class="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0"></div>
+    <div class="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 z-10" style="width: 100%"></div>
+
+    <div class="relative z-20 flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-medium">1</div>
+      <span class="text-sm mt-2 font-medium text-primary">填写信息</span>
+    </div>
+
+    <div class="relative z-20 flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-medium">2</div>
+      <span class="text-sm mt-2 font-medium text-primary">上传图片</span>
+    </div>
+
+    <div class="relative z-20 flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-medium">3</div>
+      <span class="text-sm mt-2 font-medium text-primary">确认发布</span>
+    </div>
+  </div>
+
+  <!-- 发布物品表单 -->
+  <form id="publishForm" class="bg-white rounded-xl shadow-md p-6 md:p-8 space-y-6">
+    <!-- 物品标题 -->
+    <div class="space-y-1">
+      <label for="title" class="form-label">
+        物品标题 <span class="text-red-500">*</span>
+        <span class="text-xs text-gray-500 font-normal ml-1">(5-30个字符)</span>
+      </label>
+      <input
+        type="text"
+        id="title"
+        name="title"
+        class="form-input"
+        placeholder="请输入物品标题"
+        maxlength="30"
+      >
+      <p id="titleError" class="error-message">请输入5-30个字符的标题</p>
+    </div>
+
+    <!-- 品类和新旧程度 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- 品类 -->
+      <div class="space-y-1">
+        <label for="category" class="form-label">
+          品类 <span class="text-red-500">*</span>
+        </label>
+        <select id="category" name="category" class="form-input">
+          <option value="">请选择品类</option>
+          <option value="textbook">教材</option>
+          <option value="electronic">电子产品</option>
+          <option value="daily">生活用品</option>
+          <option value="clothing">服饰鞋帽</option>
+          <option value="sports">运动器材</option>
+          <option value="beauty">美妆护肤</option>
+          <option value="other">其他</option>
+        </select>
+        <p id="categoryError" class="error-message">请选择物品品类</p>
+      </div>
+
+      <!-- 新旧程度 -->
+      <div class="space-y-1">
+        <label class="form-label">
+          新旧程度 <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="relative">
+            <input type="radio" name="condition" value="new" class="peer sr-only">
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">全新</span>
+          </label>
+          <label class="relative">
+            <input type="radio" name="condition" value="95" class="peer sr-only">
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">95新</span>
+          </label>
+          <label class="relative">
+            <input type="radio" name="condition" value="90" class="peer sr-only">
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">9新</span>
+          </label>
+          <label class="relative">
+            <input type="radio" name="condition" value="80" class="peer sr-only">
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">8新</span>
+          </label>
+          <label class="relative md:col-span-3">
+            <input type="radio" name="condition" value="70" class="peer sr-only">
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">7新及以下</span>
+          </label>
+        </div>
+        <p id="conditionError" class="error-message">请选择物品新旧程度</p>
+      </div>
+    </div>
+
+    <!-- 价格和交易方式 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- 价格 -->
+      <div class="space-y-1">
+        <label for="price" class="form-label">
+          价格（元）<span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            id="price"
+            name="price"
+            class="form-input pl-8"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+          >
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">¥</span>
+        </div>
+        <p id="priceError" class="error-message">请输入有效的价格</p>
+      </div>
+
+      <!-- 交易方式 -->
+      <div class="space-y-1">
+        <label class="form-label">
+          交易方式 <span class="text-red-500">*</span>
+        </label>
+        <div class="flex gap-4">
+          <label class="relative flex-1">
+            <input type="radio" name="transactionMethod" value="pickup" class="peer sr-only" checked>
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">自提</span>
+          </label>
+          <label class="relative flex-1">
+            <input type="radio" name="transactionMethod" value="delivery" class="peer sr-only">
+            <span class="block text-center py-2.5 border rounded-lg cursor-pointer peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all">送货上门</span>
+          </label>
+        </div>
+        <p id="transactionMethodError" class="error-message">请选择交易方式</p>
+      </div>
+    </div>
+
+    <!-- 自提点 -->
+    <div class="space-y-1" id="pickupLocationContainer">
+      <label for="pickupLocation" class="form-label">
+        自提点 <span class="text-red-500">*</span>
+      </label>
+      <select id="pickupLocation" name="pickupLocation" class="form-input">
+        <option value="">请选择自提点</option>
+        <option value="northGate">学校北门</option>
+        <option value="southGate">学校南门</option>
+        <option value="library">图书馆门口</option>
+        <option value="dorm1">1号宿舍楼</option>
+        <option value="dorm5">5号宿舍楼</option>
+        <option value="canteen">第一食堂</option>
+      </select>
+      <p id="pickupLocationError" class="error-message">请选择自提点</p>
+      <div class="text-xs text-gray-500 mt-1">
+        <a href="#" class="text-primary hover:underline">管理我的地址</a>
+      </div>
+    </div>
+
+    <!-- 物品图片 -->
+    <div class="space-y-2">
+      <label class="form-label">
+        物品图片 <span class="text-red-500">*</span>
+        <span class="text-xs text-gray-500 font-normal ml-1">(1-5张，JPG/PNG格式，单张≤5MB)</span>
+      </label>
+
+      <div class="image-preview-container" id="imagePreviewContainer">
+        <label for="imageUpload" class="w-24 h-24 rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 hover:border-primary hover:text-primary cursor-pointer transition-colors">
+          <i class="fa fa-plus text-xl mb-1"></i>
+          <span class="text-xs text-center">添加图片</span>
+          <input type="file" id="imageUpload" name="images" class="hidden" accept="image/jpeg, image/png" multiple max="5">
+        </label>
+      </div>
+
+      <p id="imageError" class="error-message">请上传1-5张图片</p>
+    </div>
+
+    <!-- 物品描述 -->
+    <div class="space-y-1">
+      <label for="description" class="form-label">
+        物品描述 <span class="text-red-500">*</span>
+        <span class="text-xs text-gray-500 font-normal ml-1">(10-200个字符)</span>
+      </label>
+      <textarea
+        id="description"
+        name="description"
+        class="form-input min-h-[100px] resize-y"
+        placeholder="请描述物品功能、使用情况等信息"
+        maxlength="200"
+      ></textarea>
+      <div class="flex justify-between">
+        <p id="descriptionError" class="error-message">请输入10-200个字符的描述</p>
+        <span id="charCount" class="text-xs text-gray-500">0/200</span>
+      </div>
+    </div>
+
+    <!-- 备注 -->
+    <div class="space-y-1">
+      <label for="notes" class="form-label">
+        备注
+        <span class="text-xs text-gray-500 font-normal ml-1">(选填)</span>
+      </label>
+      <textarea
+        id="notes"
+        name="notes"
+        class="form-input min-h-[80px] resize-y"
+        placeholder="其他需要说明的信息"
+        maxlength="100"
+      ></textarea>
+      <span class="text-xs text-gray-500">0/100</span>
+    </div>
+
+    <!-- 提交按钮 -->
+    <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-100">
+      <button type="button" id="cancelBtn" class="btn-secondary flex-1">
+        <i class="fa fa-arrow-left mr-1.5"></i> 返回
+      </button>
+      <button type="submit" id="submitBtn" class="btn-primary flex-1">
+        确认发布 <i class="fa fa-check ml-1.5"></i>
+      </button>
+    </div>
+  </form>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 mt-16">
+  <div class="container mx-auto px-4 py-8">
+    <div class="text-center text-gray-500 text-sm">
+      <p>© 2025 校园易物平台 - 让闲置物品流动起来</p>
+      <div class="flex justify-center gap-4 mt-3">
+        <a href="#" class="hover:text-primary transition-colors">关于我们</a>
+        <a href="#" class="hover:text-primary transition-colors">使用帮助</a>
+        <a href="#" class="hover:text-primary transition-colors">联系客服</a>
+        <a href="#" class="hover:text-primary transition-colors">隐私政策</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- 成功提示弹窗 -->
+<div id="successModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+    <div class="text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa fa-check text-2xl text-green-500"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">发布成功！</h3>
+      <p class="text-gray-600 mb-6">您的物品已成功发布，正在等待审核</p>
+      <div class="flex gap-3">
+        <a href="#" class="flex-1 py-2.5 border border-gray-300 rounded-lg text-center hover:bg-gray-50 transition-colors">
+          继续发布
+        </a>
+        <a href="#" class="flex-1 py-2.5 bg-primary text-white rounded-lg text-center hover:bg-primary/90 transition-colors">
+          查看我的物品
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 字符计数功能
+  const descriptionTextarea = document.getElementById('description');
+  const charCount = document.getElementById('charCount');
+
+  descriptionTextarea.addEventListener('input', function() {
+    const length = this.value.length;
+    charCount.textContent = `${length}/200`;
+
+    // 当接近最大长度时改变颜色
+    if (length > 180) {
+      charCount.classList.add('text-amber-500');
+    } else {
+      charCount.classList.remove('text-amber-500');
+    }
+  });
+
+  // 交易方式切换逻辑
+  const transactionRadios = document.querySelectorAll('input[name="transactionMethod"]');
+  const pickupLocationContainer = document.getElementById('pickupLocationContainer');
+
+  transactionRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.value === 'pickup') {
+        pickupLocationContainer.classList.remove('hidden');
+      } else {
+        pickupLocationContainer.classList.add('hidden');
+        // 清除自提点的错误状态
+        hideError('pickupLocationError');
+      }
+    });
+  });
+
+  // 图片上传预览功能
+  const imageUpload = document.getElementById('imageUpload');
+  const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+  const addImageLabel = imagePreviewContainer.querySelector('label');
+
+  imageUpload.addEventListener('change', function(e) {
+    const files = e.target.files;
+
+    // 清除之前的预览（除了添加按钮）
+    const existingPreviews = imagePreviewContainer.querySelectorAll('.image-preview');
+    existingPreviews.forEach(preview => preview.remove());
+
+    // 显示新的预览
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // 验证文件类型
+      if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
+        showError('imageError', '请上传JPG或PNG格式的图片');
+        return;
+      }
+
+      // 验证文件大小
+      if (file.size > 5 * 1024 * 1024) {
+        showError('imageError', '单张图片大小不能超过5MB');
+        return;
+      }
+
+      // 创建预览元素
+      const preview = document.createElement('div');
+      preview.className = 'image-preview';
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.className = 'w-full h-full object-cover';
+      img.alt = `物品图片 ${i + 1}`;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors';
+      removeBtn.innerHTML = '<i class="fa fa-times text-xs"></i>';
+      removeBtn.onclick = function() {
+        preview.remove();
+        // 重置file input以允许重新选择相同的文件
+        imageUpload.value = '';
+        validateImages();
+      };
+
+      preview.appendChild(img);
+      preview.appendChild(removeBtn);
+
+      // 在添加按钮前插入预览
+      imagePreviewContainer.insertBefore(preview, addImageLabel);
+    }
+
+    validateImages();
+  });
+
+  // 表单验证函数
+  function validateForm() {
+    let isValid = true;
+
+    // 验证标题
+    const title = document.getElementById('title').value.trim();
+    if (title.length < 5 || title.length > 30) {
+      showError('titleError', '请输入5-30个字符的标题');
+      isValid = false;
+    } else {
+      hideError('titleError');
+    }
+
+    // 验证品类
+    const category = document.getElementById('category').value;
+    if (!category) {
+      showError('categoryError', '请选择物品品类');
+      isValid = false;
+    } else {
+      hideError('categoryError');
+    }
+
+    // 验证新旧程度
+    const condition = document.querySelector('input[name="condition"]:checked');
+    if (!condition) {
+      showError('conditionError', '请选择物品新旧程度');
+      isValid = false;
+    } else {
+      hideError('conditionError');
+    }
+
+    // 验证价格
+    const price = document.getElementById('price').value;
+    if (!price || isNaN(price) || parseFloat(price) < 0) {
+      showError('priceError', '请输入有效的价格');
+      isValid = false;
+    } else {
+      hideError('priceError');
+    }
+
+    // 验证交易方式
+    const transactionMethod = document.querySelector('input[name="transactionMethod"]:checked');
+    if (!transactionMethod) {
+      showError('transactionMethodError', '请选择交易方式');
+      isValid = false;
+    } else {
+      hideError('transactionMethodError');
+
+      // 如果是自提，验证自提点
+      if (transactionMethod.value === 'pickup') {
+        const pickupLocation = document.getElementById('pickupLocation').value;
+        if (!pickupLocation) {
+          showError('pickupLocationError', '请选择自提点');
+          isValid = false;
+        } else {
+          hideError('pickupLocationError');
+        }
+      }
+    }
+
+    // 验证图片
+    if (!validateImages()) {
+      isValid = false;
+    }
+
+    // 验证描述
+    const description = document.getElementById('description').value.trim();
+    if (description.length < 10 || description.length > 200) {
+      showError('descriptionError', '请输入10-200个字符的描述');
+      isValid = false;
+    } else {
+      hideError('descriptionError');
+    }
+
+    return isValid;
+  }
+
+  // 验证图片数量
+  function validateImages() {
+    const previewCount = imagePreviewContainer.querySelectorAll('.image-preview').length;
+    if (previewCount < 1 || previewCount > 5) {
+      showError('imageError', '请上传1-5张图片');
+      return false;
+    } else {
+      hideError('imageError');
+      return true;
+    }
+  }
+
+  // 显示错误信息
+  function showError(elementId, message = null) {
+    const errorElement = document.getElementById(elementId);
+    if (message) {
+      errorElement.textContent = message;
+    }
+    errorElement.classList.remove('hidden');
+
+    // 高亮显示对应的输入框
+    const inputId = elementId.replace('Error', '');
+    const inputElement = document.getElementById(inputId);
+    if (inputElement) {
+      inputElement.classList.add('border-red-500');
+      inputElement.classList.add('focus:border-red-500');
+      inputElement.classList.add('focus:ring-red-200');
+    }
+  }
+
+  // 隐藏错误信息
+  function hideError(elementId) {
+    const errorElement = document.getElementById(elementId);
+    errorElement.classList.add('hidden');
+
+    // 移除高亮
+    const inputId = elementId.replace('Error', '');
+    const inputElement = document.getElementById(inputId);
+    if (inputElement) {
+      inputElement.classList.remove('border-red-500');
+      inputElement.classList.remove('focus:border-red-500');
+      inputElement.classList.remove('focus:ring-red-200');
+    }
+  }
+
+  // 表单提交处理
+  const publishForm = document.getElementById('publishForm');
+  publishForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (validateForm()) {
+      // 显示成功弹窗
+      const successModal = document.getElementById('successModal');
+      successModal.classList.remove('opacity-0', 'pointer-events-none');
+      successModal.querySelector('div').classList.remove('scale-95');
+      successModal.querySelector('div').classList.add('scale-100');
+
+      // 阻止背景滚动
+      document.body.style.overflow = 'hidden';
+    } else {
+      // 滚动到第一个错误的位置
+      const firstError = document.querySelector('.error-message:not(.hidden)');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  });
+
+  // 取消按钮
+  document.getElementById('cancelBtn').addEventListener('click', function() {
+    if (confirm('确定要放弃发布吗？已填写的内容将会丢失。')) {
+      window.history.back();
+    }
+  });
+
+  // 为所有输入框添加实时验证
+  const inputElements = publishForm.querySelectorAll('input, select, textarea');
+  inputElements.forEach(element => {
+    element.addEventListener('blur', function() {
+      validateForm();
+    });
+
+    // 对于文本输入，添加输入时验证
+    if (element.type === 'text' || element.type === 'number' || element.tagName === 'TEXTAREA') {
+      element.addEventListener('input', function() {
+        validateForm();
+      });
+    }
+  });
+
+  // 单选按钮组变化时验证
+  const radioGroups = ['condition', 'transactionMethod'];
+  radioGroups.forEach(group => {
+    document.querySelectorAll(`input[name="${group}"]`).forEach(radio => {
+      radio.addEventListener('change', validateForm);
+    });
+  });
+
+  // 关闭成功弹窗
+  document.getElementById('successModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.add('opacity-0', 'pointer-events-none');
+      this.querySelector('div').classList.remove('scale-100');
+      this.querySelector('div').classList.add('scale-95');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // 导航栏滚动效果
+  window.addEventListener('scroll', function() {
+    const header = document.querySelector('header');
+    if (window.scrollY > 10) {
+      header.classList.add('py-2', 'shadow');
+      header.classList.remove('py-3', 'shadow-sm');
+    } else {
+      header.classList.add('py-3', 'shadow-sm');
+      header.classList.remove('py-2', 'shadow');
+    }
+  });
+</script>
+</body>
+</html>

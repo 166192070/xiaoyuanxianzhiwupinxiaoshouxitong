@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据导出系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    // Tailwind 配置
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#6B7280',
+            success: '#00B42A',
+            warning: '#FF7D00',
+            danger: '#F53F3F',
+            light: '#F2F3F5',
+            dark: '#1D2129'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.06);
+      }
+      .btn-hover {
+        @apply transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5;
+      }
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark min-h-screen">
+<!-- 顶部导航栏 -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <i class="fa fa-database text-primary text-2xl"></i>
+      <h1 class="text-xl font-bold text-dark">数据管理系统</h1>
+    </div>
+    <nav class="hidden md:block">
+      <ul class="flex space-x-6">
+        <li><a href="#" class="text-secondary hover:text-primary transition-colors">数据概览</a></li>
+        <li><a href="#" class="text-primary font-medium border-b-2 border-primary pb-1">数据导出</a></li>
+        <li><a href="#" class="text-secondary hover:text-primary transition-colors">数据备份</a></li>
+        <li><a href="#" class="text-secondary hover:text-primary transition-colors">系统设置</a></li>
+      </ul>
+    </nav>
+    <button class="md:hidden text-dark text-xl">
+      <i class="fa fa-bars"></i>
+    </button>
+  </div>
+</header>
+
+<!-- 主要内容区 -->
+<main class="container mx-auto px-4 py-8">
+  <!-- 页面标题与说明 -->
+  <div class="mb-8">
+    <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold mb-2">数据导出</h2>
+    <p class="text-secondary">支持导出指定类型数据为 Excel 格式，单次导出数据量不超过 1000 条</p>
+  </div>
+
+  <!-- 数据导出快捷卡片 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <!-- 统计数据导出 -->
+    <div class="bg-white rounded-lg p-6 card-shadow hover:border-primary/30 border border-transparent transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">统计数据</h3>
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <i class="fa fa-bar-chart"></i>
+        </div>
+      </div>
+      <p class="text-secondary text-sm mb-6">包含平台运营数据、流量数据、转化数据等统计指标</p>
+      <button class="export-btn w-full py-2.5 bg-primary text-white rounded-lg btn-hover flex items-center justify-center" data-type="statistics">
+        <i class="fa fa-download mr-2"></i>导出 Excel
+      </button>
+    </div>
+
+    <!-- 用户列表导出 -->
+    <div class="bg-white rounded-lg p-6 card-shadow hover:border-primary/30 border border-transparent transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">用户列表</h3>
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <i class="fa fa-users"></i>
+        </div>
+      </div>
+      <p class="text-secondary text-sm mb-6">包含用户ID、手机号、注册时间、会员等级、状态等完整字段</p>
+      <button class="export-btn w-full py-2.5 bg-primary text-white rounded-lg btn-hover flex items-center justify-center" data-type="user">
+        <i class="fa fa-download mr-2"></i>导出 Excel
+      </button>
+    </div>
+
+    <!-- 交易记录导出 -->
+    <div class="bg-white rounded-lg p-6 card-shadow hover:border-primary/30 border border-transparent transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">交易记录</h3>
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <i class="fa fa-exchange"></i>
+        </div>
+      </div>
+      <p class="text-secondary text-sm mb-6">包含订单号、买卖家信息、金额、时间、支付方式、订单状态等</p>
+      <button class="export-btn w-full py-2.5 bg-primary text-white rounded-lg btn-hover flex items-center justify-center" data-type="transaction">
+        <i class="fa fa-download mr-2"></i>导出 Excel
+      </button>
+    </div>
+
+    <!-- 评价列表导出 -->
+    <div class="bg-white rounded-lg p-6 card-shadow hover:border-primary/30 border border-transparent transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">评价列表</h3>
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <i class="fa fa-comment"></i>
+        </div>
+      </div>
+      <p class="text-secondary text-sm mb-6">包含评价ID、用户信息、商品信息、评分、评价内容、评价时间等</p>
+      <button class="export-btn w-full py-2.5 bg-primary text-white rounded-lg btn-hover flex items-center justify-center" data-type="review">
+        <i class="fa fa-download mr-2"></i>导出 Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- 导出设置与筛选区 -->
+  <div class="bg-white rounded-lg p-6 card-shadow mb-8">
+    <h3 class="text-lg font-semibold mb-4 flex items-center">
+      <i class="fa fa-sliders text-primary mr-2"></i>导出设置
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 数据类型选择 -->
+      <div>
+        <label class="block text-secondary text-sm mb-2">选择数据类型</label>
+        <select id="data-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all">
+          <option value="">请选择数据类型</option>
+          <option value="statistics">统计数据</option>
+          <option value="user">用户列表</option>
+          <option value="transaction">交易记录</option>
+          <option value="review">评价列表</option>
+        </select>
+      </div>
+
+      <!-- 时间范围筛选 -->
+      <div>
+        <label class="block text-secondary text-sm mb-2">时间范围</label>
+        <div class="flex space-x-2">
+          <input type="date" id="start-date" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all">
+          <span class="flex items-center text-secondary">至</span>
+          <input type="date" id="end-date" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all">
+        </div>
+      </div>
+
+      <!-- 数据量设置 -->
+      <div>
+        <label class="block text-secondary text-sm mb-2">导出数据量（条）</label>
+        <div class="flex items-center">
+          <input type="number" id="data-count" min="1" max="1000" value="100" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all">
+          <span class="ml-2 text-secondary text-sm">最多 1000 条</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 字段选择（展开/收起） -->
+    <div class="mt-6">
+      <button id="field-toggle" class="flex items-center text-primary text-sm hover:text-primary/80 transition-colors">
+        <i class="fa fa-chevron-down mr-1 transition-transform duration-300" id="field-icon"></i>
+        自定义导出字段
+      </button>
+      <div id="field-selection" class="mt-4 hidden">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <!-- 动态字段选项（根据选择的数据类型变化） -->
+          <div id="field-options" class="col-span-full">
+            <p class="text-secondary text-sm mb-3">请先选择数据类型</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+      <button id="reset-btn" class="px-6 py-2.5 border border-gray-300 rounded-lg text-secondary hover:bg-gray-50 transition-colors">
+        重置
+      </button>
+      <button id="confirm-export-btn" class="px-6 py-2.5 bg-primary text-white rounded-lg btn-hover">
+        <i class="fa fa-download mr-2"></i>确认导出
+      </button>
+    </div>
+  </div>
+
+  <!-- 导出历史记录 -->
+  <div class="bg-white rounded-lg p-6 card-shadow">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-semibold flex items-center">
+        <i class="fa fa-history text-primary mr-2"></i>导出历史记录
+      </h3>
+      <button class="text-primary text-sm hover:text-primary/80 transition-colors">
+        查看全部 <i class="fa fa-angle-right ml-1"></i>
+      </button>
+    </div>
+
+    <!-- 历史记录表格 -->
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[640px]">
+        <thead>
+        <tr class="border-b border-gray-200">
+          <th class="text-left py-3 px-4 text-secondary font-medium">导出类型</th>
+          <th class="text-left py-3 px-4 text-secondary font-medium">数据量</th>
+          <th class="text-left py-3 px-4 text-secondary font-medium">导出时间</th>
+          <th class="text-left py-3 px-4 text-secondary font-medium">操作人</th>
+          <th class="text-left py-3 px-4 text-secondary font-medium">状态</th>
+          <th class="text-left py-3 px-4 text-secondary font-medium">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4">交易记录</td>
+          <td class="py-3 px-4">500 条</td>
+          <td class="py-3 px-4 text-secondary text-sm">2024-05-20 14:30:25</td>
+          <td class="py-3 px-4">admin</td>
+          <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success/10 text-success">
+                                    <i class="fa fa-check-circle mr-1"></i>成功
+                                </span>
+          </td>
+          <td class="py-3 px-4">
+            <a href="#" class="text-primary hover:text-primary/80 mr-4 transition-colors">
+              <i class="fa fa-download mr-1"></i>下载
+            </a>
+            <a href="#" class="text-secondary hover:text-secondary/80 transition-colors">
+              <i class="fa fa-trash-o mr-1"></i>删除
+            </a>
+          </td>
+        </tr>
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4">用户列表</td>
+          <td class="py-3 px-4">1000 条</td>
+          <td class="py-3 px-4 text-secondary text-sm">2024-05-19 09:15:42</td>
+          <td class="py-3 px-4">admin</td>
+          <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success/10 text-success">
+                                    <i class="fa fa-check-circle mr-1"></i>成功
+                                </span>
+          </td>
+          <td class="py-3 px-4">
+            <a href="#" class="text-primary hover:text-primary/80 mr-4 transition-colors">
+              <i class="fa fa-download mr-1"></i>下载
+            </a>
+            <a href="#" class="text-secondary hover:text-secondary/80 transition-colors">
+              <i class="fa fa-trash-o mr-1"></i>删除
+            </a>
+          </td>
+        </tr>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4">统计数据</td>
+          <td class="py-3 px-4">1 条（汇总）</td>
+          <td class="py-3 px-4 text-secondary text-sm">2024-05-18 16:40:18</td>
+          <td class="py-3 px-4">admin</td>
+          <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success/10 text-success">
+                                    <i class="fa fa-check-circle mr-1"></i>成功
+                                </span>
+          </td>
+          <td class="py-3 px-4">
+            <a href="#" class="text-primary hover:text-primary/80 mr-4 transition-colors">
+              <i class="fa fa-download mr-1"></i>下载
+            </a>
+            <a href="#" class="text-secondary hover:text-secondary/80 transition-colors">
+              <i class="fa fa-trash-o mr-1"></i>删除
+            </a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 mt-12 py-6">
+  <div class="container mx-auto px-4 text-center text-secondary text-sm">
+    <p>© 2025 数据管理系统 版权所有 | 单次导出数据量限制：不超过 1000 条</p>
+  </div>
+</footer>
+
+<!-- 导出弹窗 -->
+<div id="export-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden fade-in">
+  <div class="bg-white rounded-lg w-full max-w-md mx-4 overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+      <h3 class="text-lg font-semibold">正在导出数据</h3>
+    </div>
+    <div class="p-6">
+      <div class="flex flex-col items-center">
+        <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+        <p class="text-secondary mb-2" id="export-status-text">正在准备导出数据...</p>
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+          <div id="export-progress" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p class="text-xs text-secondary mt-2">单次导出数据量不超过 1000 条，防止系统卡顿</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 导出成功弹窗 -->
+<div id="success-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden fade-in">
+  <div class="bg-white rounded-lg w-full max-w-md mx-4 overflow-hidden">
+    <div class="p-6 text-center">
+      <div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-success text-2xl mx-auto mb-4">
+        <i class="fa fa-check"></i>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">导出成功</h3>
+      <p class="text-secondary mb-6" id="success-message">数据已成功导出为 Excel 格式</p>
+      <div class="flex space-x-3">
+        <button id="close-success" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-secondary hover:bg-gray-50 transition-colors">
+          关闭
+        </button>
+        <button id="download-file" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg btn-hover">
+          <i class="fa fa-download mr-1"></i>下载文件
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 页面加载完成后执行
+  document.addEventListener('DOMContentLoaded', function() {
+    // 字段选择展开/收起
+    const fieldToggle = document.getElementById('field-toggle');
+    const fieldSelection = document.getElementById('field-selection');
+    const fieldIcon = document.getElementById('field-icon');
+
+    fieldToggle.addEventListener('click', function() {
+      fieldSelection.classList.toggle('hidden');
+      fieldIcon.classList.toggle('rotate-180');
+    });
+
+    // 数据类型选择变化时，更新字段选项
+    const dataTypeSelect = document.getElementById('data-type');
+    const fieldOptions = document.getElementById('field-options');
+
+    // 各类数据的字段配置
+    const fieldConfig = {
+      statistics: [
+        { id: 'stat_date', name: '日期' },
+        { id: 'pv', name: '访问量' },
+        { id: 'uv', name: '独立访客' },
+        { id: 'order_count', name: '订单数' },
+        { id: 'order_amount', name: '订单金额' },
+        { id: 'user_register', name: '新增用户' },
+        { id: 'conversion_rate', name: '转化率' }
+      ],
+      user: [
+        { id: 'user_id', name: '用户ID', checked: true },
+        { id: 'username', name: '用户名', checked: true },
+        { id: 'phone', name: '手机号', checked: true },
+        { id: 'register_time', name: '注册时间', checked: true },
+        { id: 'member_level', name: '会员等级' },
+        { id: 'status', name: '账号状态' },
+        { id: 'last_login', name: '最后登录时间' },
+        { id: 'order_count', name: '订单总数' },
+        { id: 'consumption', name: '消费总额' }
+      ],
+      transaction: [
+        { id: 'order_id', name: '订单号', checked: true },
+        { id: 'buyer_id', name: '买家ID', checked: true },
+        { id: 'seller_id', name: '卖家ID', checked: true },
+        { id: 'amount', name: '交易金额', checked: true },
+        { id: 'create_time', name: '创建时间', checked: true },
+        { id: 'pay_time', name: '支付时间' },
+        { id: 'payment_method', name: '支付方式' },
+        { id: 'status', name: '订单状态', checked: true },
+        { id: 'goods_info', name: '商品信息' },
+        { id: 'shipping_address', name: '收货地址' }
+      ],
+      review: [
+        { id: 'review_id', name: '评价ID', checked: true },
+        { id: 'user_id', name: '用户ID', checked: true },
+        { id: 'goods_id', name: '商品ID', checked: true },
+        { id: 'score', name: '评分', checked: true },
+        { id: 'content', name: '评价内容' },
+        { id: 'create_time', name: '评价时间', checked: true },
+        { id: 'reply', name: '商家回复' },
+        { id: 'status', name: '评价状态' }
+      ]
+    };
+
+    dataTypeSelect.addEventListener('change', function() {
+      const selectedType = this.value;
+
+      if (!selectedType) {
+        fieldOptions.innerHTML = '<p class="text-secondary text-sm mb-3">请先选择数据类型</p>';
+        return;
+      }
+
+      // 生成字段选择框
+      let fieldsHtml = '';
+      fieldConfig[selectedType].forEach(field => {
+        fieldsHtml += `
+                        <label class="flex items-center">
+                            <input type="checkbox" name="fields" value="${field.id}"
+                                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                                ${field.checked ? 'checked' : ''}>
+                            <span class="ml-2 text-sm">${field.name}</span>
+                        </label>
+                    `;
+      });
+
+      fieldOptions.innerHTML = fieldsHtml;
+
+      // 如果字段选择区域是隐藏的，自动展开
+      if (fieldSelection.classList.contains('hidden')) {
+        fieldSelection.classList.remove('hidden');
+        fieldIcon.classList.add('rotate-180');
+      }
+    });
+
+    // 快捷导出按钮点击事件
+    const exportBtns = document.querySelectorAll('.export-btn');
+    exportBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const type = this.getAttribute('data-type');
+        // 设置数据类型选择框的值
+        dataTypeSelect.value = type;
+        // 触发change事件，更新字段选项
+        dataTypeSelect.dispatchEvent(new Event('change'));
+        // 自动触发导出
+        document.getElementById('confirm-export-btn').click();
+      });
+    });
+
+    // 确认导出按钮点击事件
+    const confirmExportBtn = document.getElementById('confirm-export-btn');
+    confirmExportBtn.addEventListener('click', function() {
+      const dataType = dataTypeSelect.value;
+      const dataCount = document.getElementById('data-count').value;
+      const startDate = document.getElementById('start-date').value;
+      const endDate = document.getElementById('end-date').value;
+
+      // 验证数据
+      if (!dataType) {
+        alert('请选择数据类型');
+        return;
+      }
+
+      if (dataCount < 1 || dataCount > 1000) {
+        alert('导出数据量必须在1-1000条之间');
+        return;
+      }
+
+      if (startDate && endDate && startDate > endDate) {
+        alert('开始日期不能晚于结束日期');
+        return;
+      }
+
+      // 显示导出弹窗
+      const exportModal = document.getElementById('export-modal');
+      exportModal.classList.remove('hidden');
+
+      // 模拟导出进度
+      let progress = 0;
+      const progressBar = document.getElementById('export-progress');
+      const statusText = document.getElementById('export-status-text');
+      const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 10) + 1;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+
+          // 导出完成后显示成功弹窗
+          setTimeout(() => {
+            exportModal.classList.add('hidden');
+            document.getElementById('success-modal').classList.remove('hidden');
+            document.getElementById('success-message').textContent =
+              `已成功导出 ${dataCount} 条${getTypeName(dataType)}数据`;
+          }, 500);
+        }
+
+        progressBar.style.width = progress + '%';
+        statusText.textContent = `正在导出数据... ${progress}%`;
+      }, 300);
+    });
+
+    // 重置按钮点击事件
+    document.getElementById('reset-btn').addEventListener('click', function() {
+      dataTypeSelect.value = '';
+      document.getElementById('start-date').value = '';
+      document.getElementById('end-date').value = '';
+      document.getElementById('data-count').value = 100;
+      fieldOptions.innerHTML = '<p class="text-secondary text-sm mb-3">请先选择数据类型</p>';
+
+      if (!fieldSelection.classList.contains('hidden')) {
+        fieldSelection.classList.add('hidden');
+        fieldIcon.classList.remove('rotate-180');
+      }
+    });
+
+    // 关闭成功弹窗
+    document.getElementById('close-success').addEventListener('click', function() {
+      document.getElementById('success-modal').classList.add('hidden');
+    });
+
+    // 下载文件按钮
+    document.getElementById('download-file').addEventListener('click', function() {
+      const dataType = dataTypeSelect.value;
+      const fileName = `${getTypeName(dataType)}_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`;
+
+      // 这里只是模拟下载，实际项目中应该是后端返回的文件URL
+      alert(`正在下载文件: ${fileName}`);
+      document.getElementById('success-modal').classList.add('hidden');
+    });
+
+    // 辅助函数：获取数据类型的中文名称
+    function getTypeName(type) {
+      const typeMap = {
+        'statistics': '统计数据',
+        'user': '用户列表',
+        'transaction': '交易记录',
+        'review': '评价列表'
+      };
+      return typeMap[type] || type;
+    }
+  });
+</script>
+</body>
+</html>

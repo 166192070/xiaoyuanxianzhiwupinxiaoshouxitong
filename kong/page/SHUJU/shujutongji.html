@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>交易数据统计系统</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            accent: '#722ED1',
+            warning: '#FF7D00',
+            danger: '#F53F3F',
+            dark: '#1D2129',
+            'gray-light': '#F2F3F5',
+            'gray-medium': '#C9CDD4'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(22, 93, 255, 0.12);
+      }
+      .stat-card {
+        @apply bg-white rounded-xl p-6 card-shadow hover-lift transition-all duration-300;
+      }
+      .chart-container {
+        @apply bg-white rounded-xl p-6 card-shadow transition-all duration-300;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-inter text-dark min-h-screen flex flex-col">
+<!-- 顶部导航栏 -->
+<header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300" id="navbar">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <div class="flex items-center">
+        <i class="fa fa-bar-chart text-primary text-2xl mr-3"></i>
+        <h1 class="text-xl font-bold text-dark">交易数据统计系统</h1>
+      </div>
+
+      <div class="flex items-center space-x-4" id="userSection">
+        <button id="loginBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-300">
+          <i class="fa fa-sign-in mr-2"></i>管理员登录
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- 主内容区 -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- 权限提示 -->
+  <div id="permissionAlert" class="bg-blue-50 border-l-4 border-primary p-4 mb-8 rounded-r-lg">
+    <div class="flex items-start">
+      <div class="flex-shrink-0">
+        <i class="fa fa-info-circle text-primary text-xl"></i>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-blue-700">请登录管理员账号以查看交易统计数据。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据统计区域 (默认隐藏) -->
+  <div id="statisticsDashboard" class="hidden space-y-8">
+    <!-- 欢迎信息 -->
+    <div class="flex justify-between items-center">
+      <div>
+        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">交易数据分析</h2>
+        <p class="text-gray-500 mt-1">实时监控交易数据趋势与用户行为</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span id="currentDate" class="text-gray-500"></span>
+        <button id="logoutBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+          <i class="fa fa-sign-out mr-2"></i>退出登录
+        </button>
+      </div>
+    </div>
+
+    <!-- 整体数据统计卡片 -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 总交易量 -->
+      <div class="stat-card">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 text-sm mb-1">总交易量</p>
+            <h3 class="text-3xl font-bold" id="totalTransactions">0</h3>
+            <p class="text-green-500 text-sm mt-2 flex items-center">
+              <i class="fa fa-arrow-up mr-1"></i>
+              <span>12.5%</span>
+              <span class="text-gray-400 ml-1">较上月</span>
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <i class="fa fa-exchange text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 总交易金额 -->
+      <div class="stat-card">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 text-sm mb-1">总交易金额</p>
+            <h3 class="text-3xl font-bold" id="totalAmount">¥0</h3>
+            <p class="text-green-500 text-sm mt-2 flex items-center">
+              <i class="fa fa-arrow-up mr-1"></i>
+              <span>8.2%</span>
+              <span class="text-gray-400 ml-1">较上月</span>
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+            <i class="fa fa-rmb text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 活跃用户数 -->
+      <div class="stat-card">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 text-sm mb-1">活跃用户数</p>
+            <h3 class="text-3xl font-bold" id="activeUsers">0</h3>
+            <p class="text-red-500 text-sm mt-2 flex items-center">
+              <i class="fa fa-arrow-down mr-1"></i>
+              <span>3.1%</span>
+              <span class="text-gray-400 ml-1">较上月</span>
+            </p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+            <i class="fa fa-users text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 图表区域 -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- 月度交易量趋势 -->
+      <div class="chart-container">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-bold text-lg">月度交易量趋势</h3>
+          <div class="flex space-x-2">
+            <button class="period-btn px-3 py-1 text-sm rounded-full bg-primary text-white">近12个月</button>
+            <button class="period-btn px-3 py-1 text-sm rounded-full bg-gray-light text-gray-600 hover:bg-gray-200">近6个月</button>
+            <button class="period-btn px-3 py-1 text-sm rounded-full bg-gray-light text-gray-600 hover:bg-gray-200">近3个月</button>
+          </div>
+        </div>
+        <div class="h-[350px]">
+          <canvas id="monthlyTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 物品品类占比 -->
+      <div class="chart-container">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-bold text-lg">物品品类交易量占比</h3>
+          <button class="text-primary text-sm flex items-center hover:underline">
+            查看详情 <i class="fa fa-angle-right ml-1"></i>
+          </button>
+        </div>
+        <div class="h-[350px]">
+          <div id="categoryPieChart" class="w-full h-full"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分类数据统计 -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- 按物品品类统计交易量 -->
+      <div class="chart-container">
+        <h3 class="font-bold text-lg mb-6">按物品品类统计交易量</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+            <tr>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">品类名称</th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">交易量</th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">占比</th>
+              <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">环比</th>
+            </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="categoryTableBody">
+            <!-- 数据将通过JS动态填充 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 按院系统计用户交易频次 -->
+      <div class="chart-container">
+        <h3 class="font-bold text-lg mb-6">按院系统计用户交易频次</h3>
+        <div class="h-[300px]">
+          <div id="departmentBarChart" class="w-full h-full"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 py-6">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <p class="text-gray-500 text-sm">© 2025 交易数据统计系统. 保留所有权利.</p>
+      <div class="flex space-x-6 mt-4 md:mt-0">
+        <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+          <i class="fa fa-question-circle"></i> 帮助中心
+        </a>
+        <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+          <i class="fa fa-file-text-o"></i> 使用文档
+        </a>
+        <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
+          <i class="fa fa-envelope-o"></i> 联系我们
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- 登录模态框 -->
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-8 transform transition-all">
+    <div class="text-center mb-6">
+      <h3 class="text-2xl font-bold text-dark">管理员登录</h3>
+      <p class="text-gray-500 mt-2">请输入您的账号和密码</p>
+    </div>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fa fa-user text-gray-400"></i>
+          </div>
+          <input type="text" id="username" name="username" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-colors duration-300" placeholder="请输入用户名" required>
+        </div>
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fa fa-lock text-gray-400"></i>
+          </div>
+          <input type="password" id="password" name="password" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-colors duration-300" placeholder="请输入密码" required>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <input id="rememberMe" name="rememberMe" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+          <label for="rememberMe" class="ml-2 block text-sm text-gray-700">记住我</label>
+        </div>
+        <a href="#" class="text-sm text-primary hover:underline">忘记密码?</a>
+      </div>
+
+      <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-300">
+        登录
+      </button>
+    </form>
+
+    <div class="mt-6 text-center">
+      <p class="text-sm text-gray-500">
+        没有账号? <a href="#" class="font-medium text-primary hover:underline">联系管理员获取权限</a>
+      </p>
+    </div>
+
+    <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
+      <i class="fa fa-times text-xl"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+  // 全局变量
+  let isAuthenticated = false;
+  let monthlyTrendChart = null;
+  let categoryPieChart = null;
+  let departmentBarChart = null;
+
+  // 模拟数据
+  const mockData = {
+    totalTransactions: 12580,
+    totalAmount: 8765400,
+    activeUsers: 3250,
+    monthlyTrends: {
+      months: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+      transactions: [850, 920, 1050, 980, 1120, 1350, 1280, 1420, 1580, 1490, 1620, 1850]
+    },
+    categoryData: [
+      { name: '电子产品', value: 3850, percentage: '30.6%', change: '+12.5%', color: '#165DFF' },
+      { name: '服装鞋帽', value: 2750, percentage: '21.8%', change: '+8.2%', color: '#36CFC9' },
+      { name: '食品饮料', value: 2100, percentage: '16.7%', change: '+5.3%', color: '#722ED1' },
+      { name: '家居用品', value: 1580, percentage: '12.5%', change: '-2.1%', color: '#FF7D00' },
+      { name: '图书音像', value: 1050, percentage: '8.4%', change: '+3.7%', color: '#F53F3F' },
+      { name: '其他品类', value: 1250, percentage: '9.9%', change: '+6.8%', color: '#86909C' }
+    ],
+    departmentData: [
+      { name: '计算机学院', value: 1250 },
+      { name: '商学院', value: 980 },
+      { name: '文学院', value: 750 },
+      { name: '法学院', value: 620 },
+      { name: '医学院', value: 850 },
+      { name: '工学院', value: 1120 },
+      { name: '理学院', value: 580 }
+    ]
+  };
+
+  // DOM 元素加载完成后执行
+  document.addEventListener('DOMContentLoaded', function() {
+    // 设置当前日期
+    const now = new Date();
+    document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+
+    // 事件监听
+    document.getElementById('loginBtn').addEventListener('click', showLoginModal);
+    document.getElementById('closeModalBtn').addEventListener('click', hideLoginModal);
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // 点击模态框外部关闭
+    document.getElementById('loginModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideLoginModal();
+      }
+    });
+
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function() {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 10) {
+        navbar.classList.add('shadow');
+      } else {
+        navbar.classList.remove('shadow');
+      }
+    });
+  });
+
+  // 显示登录模态框
+  function showLoginModal() {
+    document.getElementById('loginModal').classList.remove('hidden');
+    document.getElementById('loginModal').classList.add('flex');
+    document.body.style.overflow = 'hidden';
+
+    // 添加动画效果
+    setTimeout(() => {
+      const modalContent = document.querySelector('#loginModal > div');
+      modalContent.classList.add('scale-100');
+      modalContent.classList.remove('scale-95');
+    }, 10);
+  }
+
+  // 隐藏登录模态框
+  function hideLoginModal() {
+    const modalContent = document.querySelector('#loginModal > div');
+    modalContent.classList.add('scale-95');
+    modalContent.classList.remove('scale-100');
+
+    setTimeout(() => {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('loginModal').classList.remove('flex');
+      document.body.style.overflow = '';
+      document.getElementById('loginForm').reset();
+    }, 300);
+  }
+
+  // 处理登录
+  function handleLogin(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    // 简单验证 (实际应用中应发送到服务器验证)
+    if (username === 'admin' && password === 'admin123') {
+      isAuthenticated = true;
+      hideLoginModal();
+      showDashboard();
+      updateUserSection();
+    } else {
+      alert('用户名或密码错误，请重试');
+    }
+  }
+
+  // 处理登出
+  function handleLogout() {
+    isAuthenticated = false;
+    hideDashboard();
+    updateUserSection();
+  }
+
+  // 更新用户区域显示
+  function updateUserSection() {
+    const userSection = document.getElementById('userSection');
+
+    if (isAuthenticated) {
+      userSection.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1005/40/40" alt="管理员头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+            </div>
+            <span class="text-sm font-medium">管理员</span>
+          </div>
+          <button id="logoutBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-300">
+            <i class="fa fa-sign-out mr-2"></i>退出登录
+          </button>
+        `;
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    } else {
+      userSection.innerHTML = `
+          <button id="loginBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-300">
+            <i class="fa fa-sign-in mr-2"></i>管理员登录
+          </button>
+        `;
+      document.getElementById('loginBtn').addEventListener('click', showLoginModal);
+    }
+  }
+
+  // 显示仪表盘
+  function showDashboard() {
+    document.getElementById('permissionAlert').classList.add('hidden');
+    document.getElementById('statisticsDashboard').classList.remove('hidden');
+
+    // 填充数据
+    populateStatisticsData();
+
+    // 初始化图表
+    initCharts();
+
+    // 添加淡入动画
+    setTimeout(() => {
+      document.getElementById('statisticsDashboard').classList.add('opacity-100');
+      document.getElementById('statisticsDashboard').classList.remove('opacity-0');
+    }, 10);
+  }
+
+  // 隐藏仪表盘
+  function hideDashboard() {
+    document.getElementById('permissionAlert').classList.remove('hidden');
+    document.getElementById('statisticsDashboard').classList.add('hidden');
+
+    // 销毁图表
+    destroyCharts();
+  }
+
+  // 填充统计数据
+  function populateStatisticsData() {
+    // 填充总体数据
+    document.getElementById('totalTransactions').textContent = mockData.totalTransactions.toLocaleString();
+    document.getElementById('totalAmount').textContent = '¥' + mockData.totalAmount.toLocaleString();
+    document.getElementById('activeUsers').textContent = mockData.activeUsers.toLocaleString();
+
+    // 填充品类表格数据
+    const categoryTableBody = document.getElementById('categoryTableBody');
+    categoryTableBody.innerHTML = '';
+
+    mockData.categoryData.forEach(category => {
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-gray-50 transition-colors duration-200';
+
+      // 确定变化率的颜色
+      const changeClass = category.change.startsWith('+') ? 'text-green-500' : 'text-red-500';
+
+      row.innerHTML = `
+          <td class="px-4 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${category.color}"></div>
+              <div class="text-sm font-medium text-gray-900">${category.name}</div>
+            </div>
+          </td>
+          <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${category.value.toLocaleString()}</td>
+          <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${category.percentage}</td>
+          <td class="px-4 py-4 whitespace-nowrap text-sm ${changeClass}">${category.change}</td>
+        `;
+
+      categoryTableBody.appendChild(row);
+    });
+  }
+
+  // 初始化图表
+  function initCharts() {
+    // 月度交易量趋势图 (使用Chart.js)
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    monthlyTrendChart = new Chart(monthlyTrendCtx, {
+      type: 'line',
+      data: {
+        labels: mockData.monthlyTrends.months,
+        datasets: [{
+          label: '交易量',
+          data: mockData.monthlyTrends.transactions,
+          backgroundColor: 'rgba(22, 93, 255, 0.1)',
+          borderColor: '#165DFF',
+          borderWidth: 2,
+          pointBackgroundColor: '#165DFF',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: 10,
+            cornerRadius: 6,
+            titleFont: {
+              size: 14
+            },
+            bodyFont: {
+              size: 13
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          }
+        },
+        animation: {
+          duration: 1500,
+          easing: 'easeOutQuart'
+        }
+      }
+    });
+
+    // 物品品类占比饼图 (使用ECharts)
+    const categoryPieDom = document.getElementById('categoryPieChart');
+    categoryPieChart = echarts.init(categoryPieDom);
+
+    const categoryPieOption = {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{a} <br/>{b}: {c} ({d}%)'
+      },
+      legend: {
+        orient: 'vertical',
+        left: 10,
+        textStyle: {
+          fontSize: 12
+        }
+      },
+      series: [
+        {
+          name: '品类',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 6,
+            borderColor: '#fff',
+            borderWidth: 2
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 16,
+              fontWeight: 'bold'
+            }
+          },
+          labelLine: {
+            show: false
+          },
+          data: mockData.categoryData.map(item => ({
+            value: item.value,
+            name: item.name,
+            itemStyle: {
+              color: item.color
+            }
+          }))
+        }
+      ],
+      animationDuration: 1500,
+      animationEasingUpdate: 'quinticInOut'
+    };
+
+    categoryPieChart.setOption(categoryPieOption);
+
+    // 院系统计柱状图 (使用ECharts)
+    const departmentBarDom = document.getElementById('departmentBarChart');
+    departmentBarChart = echarts.init(departmentBarDom);
+
+    const departmentBarOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01],
+        axisLine: {
+          show: false
+        },
+        splitLine: {
+          lineStyle: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        }
+      },
+      yAxis: {
+        type: 'category',
+        data: mockData.departmentData.map(item => item.name),
+        axisLine: {
+          show: false
+        },
+        axisTick: {
+          show: false
+        }
+      },
+      series: [
+        {
+          name: '交易频次',
+          type: 'bar',
+          data: mockData.departmentData.map(item => item.value),
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+              { offset: 0, color: '#165DFF' },
+              { offset: 1, color: '#36CFC9' }
+            ]),
+            borderRadius: [0, 4, 4, 0]
+          },
+          barWidth: 24
+        }
+      ],
+      animationDuration: 1500
+    };
+
+    departmentBarChart.setOption(departmentBarOption);
+
+    // 窗口大小变化时重绘图表
+    window.addEventListener('resize', function() {
+      if (monthlyTrendChart) monthlyTrendChart.resize();
+      if (categoryPieChart) categoryPieChart.resize();
+      if (departmentBarChart) departmentBarChart.resize();
+    });
+  }
+
+  // 销毁图表
+  function destroyCharts() {
+    if (monthlyTrendChart) {
+      monthlyTrendChart.destroy();
+      monthlyTrendChart = null;
+    }
+
+    if (categoryPieChart) {
+      categoryPieChart.dispose();
+      categoryPieChart = null;
+    }
+
+    if (departmentBarChart) {
+      departmentBarChart.dispose();
+      departmentBarChart = null;
+    }
+  }
+</script>
+</body>
+</html>

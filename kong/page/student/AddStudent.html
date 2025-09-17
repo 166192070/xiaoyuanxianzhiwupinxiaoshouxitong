@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>新增成员</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    .error-message{
+      color: red;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+    .form-control.error{
+      border-color: red !important;
+      box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.2)!important;
+    }
+    .form-control.success{
+      border-color: green !important;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2)!important;
+    }
+    .required-mark{
+      color: red;
+    }
+    .required-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #3b82f6;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
+  <h1 class="text-2xl font-bold mb-6">新增成员</h1>
+  <p class="required-text">
+    <span class="required-mark">*</span> 表示必填项
+  </p>
+  <form id="memberForm">
+    <!-- 用户名 -->
+    <div class="form-group">
+      <label for="sname">
+        用户名：<span class="required-mark">*</span>
+      </label>
+      <input id="sname" type="text" name="sname" placeholder="请输入10位数字用户名（学号）" value="" class="form-control">
+      <div class="error-message" id="snameError">请输入10位数字的用户名</div>
+    </div>
+
+    <!-- 初始密码 -->
+    <div class="form-group">
+      <label for="f1password">
+        初始密码：<span class="required-mark">*</span>
+      </label>
+      <input id="f1password" type="text" name="f1password" placeholder="请设置6-20位字母和数字的密码" value="" class="form-control">
+      <div class="error-message" id="f1passwordError">密码必须为6-20位字母和数字的组合</div>
+    </div>
+
+    <!-- 角色 -->
+    <div class="form-group">
+      <label for="role">角色：</label>
+      <select id="role" name="role" class="form-control">
+        <option>超级管理员</option>
+        <option>普通管理员</option>
+        <option>普通用户</option>
+      </select>
+    </div>
+
+    <!-- 用户状态 -->
+    <div class="form-group">
+      <label for="status">用户状态：</label>
+      <select id="status" name="status" class="form-control">
+        <option>启用</option>
+        <option>禁用</option>
+      </select>
+    </div>
+
+    <!-- 真实姓名 -->
+    <div class="form-group">
+      <label for="relname">
+        真实姓名：<span class="required-mark">*</span>
+      </label>
+      <input id="relname" type="text" name="relname" placeholder="请输入2-5个汉字的真实姓名" value="" class="form-control">
+      <div class="error-message" id="relnameError">请输入2-5个汉字的真实姓名</div>
+    </div>
+
+    <!-- 院系 -->
+    <div class="form-group">
+      <label for="department">院系：</label>
+      <select id="department" name="department" class="form-control">
+        <option>软件学院</option>
+        <option>机电工程学院</option>
+        <option>机械工程学院</option>
+        <option>材料科学与工程学院</option>
+        <option>化学与化工学院</option>
+        <option>信息与通信工程学院</option>
+        <option>仪器与电子学院</option>
+        <option>计算机科学与技术(大数据)学院</option>
+        <option>数学学院</option>
+        <option>经济与管理学院</option>
+        <option>人文社会科学学院</option>
+        <option>艺术学院</option>
+        <option>电气与控制工程学院</option>
+        <option>航空宇航学院</option>
+        <option>马克思主义学院</option>
+        <option>国际教育学院</option>
+        <option>创新创业学院</option>
+        <option>研究生院</option>
+        <option>继续教育学院</option>
+        <option>电力学院</option>
+        <option>环境与安全工程学院</option>
+        <option>半导体与物理学院</option>
+        <option>能源与动力工程学院</option>
+        <option>体育学院</option>
+      </select>
+    </div>
+
+    <!-- 年级 -->
+    <div class="form-group">
+      <label for="grade">年级：</label>
+      <select id="grade" name="grade" class="form-control">
+        <option>2020级</option>
+        <option>2021级</option>
+        <option>2022级</option>
+        <option>2023级</option>
+        <option>2024级</option>
+        <option>2025级</option>
+      </select>
+    </div>
+
+    <!-- 专业 -->
+    <div class="form-group">
+      <label for="major">专业：</label>
+      <select id="major" name="major" class="form-control">
+        <option>兵器类</option>
+        <option>航空航天类</option>
+        <option>机械类</option>
+        <option>包装工程</option>
+        <option>金属材料工程</option>
+        <option>无机非金属材料工程</option>
+        <option>高分子材料与工程</option>
+        <option>复合材料与工程</option>
+        <option>材料成型及控制工程</option>
+        <option>化工与制药类</option>
+        <option>制药工程</option>
+        <option>生物工程</option>
+        <option>电子信息类</option>
+        <option>光电信息科学与工程</option>
+        <option>信息对抗技术</option>
+        <option>生物医学工程</option>
+        <option>仪器类</option>
+        <option>计算机科学与技术</option>
+        <option>数据科学与大数据技术</option>
+        <option>物联网工程类</option>
+        <option>数学类</option>
+        <option>工程力学</option>
+        <option>统计学</option>
+        <option>土木类</option>
+        <option>应用化学</option>
+        <option>应用物理学</option>
+        <option>工商管理类</option>
+        <option>国际经济与贸易</option>
+        <option>经济统计学</option>
+        <option>工业工程</option>
+        <option>英语</option>
+        <option>广播电视学</option>
+        <option>运动训练</option>
+        <option>社会体育指导与管理</option>
+        <option>视觉传达设计</option>
+        <option>音乐表演</option>
+        <option>音乐学</option>
+        <option>软件工程</option>
+        <option>特种能源技术与工程</option>
+        <option>安全工程</option>
+        <option>环境工程</option>
+        <option>电气工程及其自动化</option>
+        <option>电气工程与智能控制</option>
+        <option>自动化</option>
+        <option>轨道交通信号与控制</option>
+        <option>能源动力类</option>
+        <option>车辆工程</option>
+        <option>新能源汽车工程</option>
+      </select>
+    </div>
+
+    <!-- 班级 -->
+    <div class="form-group">
+      <label for="Class">
+        班级：<span class="required-mark">*</span>
+      </label>
+      <input id="Class" type="text" name="Class" placeholder="请填写8位数字的班级" value="" class="form-control">
+      <div class="error-message" id="ClassError">请输入8位数字的班级</div>
+    </div>
+
+    <!-- 手机号码 -->
+    <div class="form-group">
+      <label for="mpnumber">
+        手机号码：<span class="required-mark">*</span>
+      </label>
+      <input id="mpnumber" type="text" name="mpnumber" placeholder="请正确填写11位数字的手机号码" value="" class="form-control">
+      <div class="error-message" id="mpnumberError">请输入11位数字的手机号码</div>
+    </div>
+
+    <!-- QQ -->
+    <div class="form-group">
+      <label for="QQ">QQ(选填)</label>
+      <input id="QQ" type="text" name="QQ" placeholder="请填写您的QQ账户" value="" class="form-control">
+      <div class="error-message" id="QQError">QQ号码格式不正确</div>
+    </div>
+
+    <div class="form-group">
+      <button type="submit">确认保存</button>
+    </div>
+  </form>
+  </div>
+
+  <script>
+    // 正则表达式规则
+    const patterns = {
+      sname: /^\d{10}$/,
+      f1password: /^[A-Za-z0-9]{6,20}$/,
+      relname: /^[\u4e00-\u9fa5]{2,5}$/,
+      Class: /^\d{8}$/,
+      mpnumber: /^\d{11}$/,
+      QQ: /^\d{5,13}$/
+    };
+
+    const inputs = [
+      { id: 'sname', required: true },
+      { id: 'f1password', required: true },
+      { id: 'relname', required: true },
+      { id: 'Class', required: true },
+      { id: 'mpnumber', required: true },
+      { id: 'QQ', required: false }
+    ];
+
+    inputs.forEach(input => {
+      const element = document.getElementById(input.id);
+      if (element) {
+        element.addEventListener('blur', () => {
+          validateInput(element, input.required);
+        });
+
+        // 输入时清除错误状态（提供更好的用户体验）
+        element.addEventListener('input', () => {
+          const errorElement = document.getElementById(`${input.id}Error`);
+          if (element.classList.contains('error')) {
+            element.classList.remove('error', 'success');
+            errorElement.style.display = 'none';
+          }
+        });
+      }
+    });
+
+    document.getElementById('memberForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      let isValid = true;
+
+      inputs.forEach(input => {
+        const element = document.getElementById(input.id);
+        if (element && !validateInput(element, input.required)) {
+          isValid = false;
+        }
+      });
+
+      if (isValid) {
+        alert('表单验证通过，准备提交！');
+
+      }
+    });
+
+    // 验证输入框的函数
+    function validateInput(element, isRequired) {
+      const value = element.value.trim();
+      const id = element.id;
+      const errorElement = document.getElementById(`${id}Error`);
+      const pattern = patterns[id];
+
+      // 检查是否为空（必填项）
+      if (isRequired && value === '') {
+        showError(element, errorElement, `请填写${getFieldName(id)}`);
+        return false;
+      }
+
+      // 非必填项为空时视为有效
+      if (!isRequired && value === '') {
+        clearStatus(element, errorElement);
+        return true;
+      }
+
+      // 验证格式
+      if (pattern && !pattern.test(value)) {
+        showError(element, errorElement, errorElement.textContent);
+        return false;
+      }
+
+      // 验证通过
+      showSuccess(element, errorElement);
+      return true;
+    }
+
+    // 显示错误状态
+    function showError(element, errorElement, message) {
+      element.classList.remove('success');
+      element.classList.add('error');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+
+    // 显示成功状态
+    function showSuccess(element, errorElement) {
+      element.classList.remove('error');
+      element.classList.add('success');
+      errorElement.style.display = 'none';
+    }
+
+    // 清除状态
+    function clearStatus(element, errorElement) {
+      element.classList.remove('error', 'success');
+      errorElement.style.display = 'none';
+    }
+
+    // 获取字段名称（用于空值提示）
+    function getFieldName(fieldId) {
+      const fieldNames = {
+        sname: '用户名',
+        f1password: '初始密码',
+        relname: '真实姓名',
+        Class: '班级',
+        mpnumber: '手机号码',
+        QQ: 'QQ号码'
+      };
+      return fieldNames[fieldId] || fieldId;
+    }
+  </script>
+</body>
+</html>
+

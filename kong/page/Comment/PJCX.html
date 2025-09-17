@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>评价查询系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    // 配置Tailwind自定义主题
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#FF7D00',
+            neutral: {
+              100: '#F5F7FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+              700: '#1D2129',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .rating-stars {
+        color: #FF7D00;
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-neutral-100 text-neutral-700 min-h-screen">
+<!-- 顶部导航栏 -->
+<header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+  <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <i class="fa fa-comments text-primary text-2xl"></i>
+      <h1 class="text-xl font-bold text-neutral-700">评价查询系统</h1>
+    </div>
+
+    <div class="flex items-center space-x-6">
+      <div class="hidden md:flex items-center space-x-4">
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors">首页</a>
+        <a href="#" class="text-primary font-medium">评价中心</a>
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors">帮助中心</a>
+      </div>
+
+      <div class="relative">
+        <button id="roleToggle" class="flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-full hover:bg-primary/20 transition-colors">
+          <i class="fa fa-user-circle"></i>
+          <span>买家视角</span>
+          <i class="fa fa-chevron-down text-xs"></i>
+        </button>
+        <div id="roleMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden z-10">
+          <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-role="buyer">买家视角</a>
+          <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-role="seller">卖家视角</a>
+        </div>
+      </div>
+
+      <button class="md:hidden text-neutral-700">
+        <i class="fa fa-bars text-xl"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="container mx-auto px-4 py-8">
+  <!-- 卖家信息搜索区 -->
+  <section id="sellerSearch" class="mb-8 bg-white p-6 rounded-xl shadow-sm">
+    <h2 class="text-xl font-bold mb-4 text-neutral-700">查找卖家评价</h2>
+    <div class="flex flex-col md:flex-row gap-4">
+      <div class="flex-1 relative">
+        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"></i>
+        <input type="text" placeholder="输入卖家名称或ID搜索"
+               class="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+      </div>
+      <button class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+        <i class="fa fa-search"></i>
+        <span>搜索</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 卖家信息和评分总览 -->
+  <section class="mb-8 bg-white p-6 rounded-xl shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center gap-6">
+      <div class="flex items-center gap-4">
+        <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+          <i class="fa fa-store text-primary text-3xl"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-neutral-700">诚信数码专营店</h2>
+          <p class="text-neutral-500 text-sm">卖家ID: S20230518001</p>
+          <p class="text-neutral-500 text-sm">开店时间: 2020-03-15</p>
+        </div>
+      </div>
+
+      <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- 总体评分 -->
+        <div class="text-center p-4 bg-neutral-50 rounded-lg">
+          <p class="text-neutral-500 text-sm mb-1">综合评分</p>
+          <div class="flex flex-col items-center">
+            <span class="text-3xl font-bold text-primary">4.8</span>
+            <div class="flex mt-1">
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star-half-o rating-stars"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 商品质量 -->
+        <div class="text-center p-4 bg-neutral-50 rounded-lg">
+          <p class="text-neutral-500 text-sm mb-1">商品质量</p>
+          <div class="flex flex-col items-center">
+            <span class="text-3xl font-bold text-primary">4.9</span>
+            <div class="flex mt-1">
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 服务态度 -->
+        <div class="text-center p-4 bg-neutral-50 rounded-lg">
+          <p class="text-neutral-500 text-sm mb-1">服务态度</p>
+          <div class="flex flex-col items-center">
+            <span class="text-3xl font-bold text-primary">4.7</span>
+            <div class="flex mt-1">
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star-half-o rating-stars"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 物流速度 -->
+        <div class="text-center p-4 bg-neutral-50 rounded-lg">
+          <p class="text-neutral-500 text-sm mb-1">物流速度</p>
+          <div class="flex flex-col items-center">
+            <span class="text-3xl font-bold text-primary">4.6</span>
+            <div class="flex mt-1">
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star rating-stars"></i>
+              <i class="fa fa-star-half-o rating-stars"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评分分布 -->
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold mb-4 text-neutral-700">评分分布</h3>
+      <div class="space-y-3">
+        <!-- 5星 -->
+        <div class="flex items-center gap-3">
+          <div class="w-16 text-sm text-neutral-500">5星</div>
+          <div class="flex-1 h-4 bg-neutral-200 rounded-full overflow-hidden">
+            <div class="h-full bg-secondary rounded-full" style="width: 78%"></div>
+          </div>
+          <div class="w-12 text-right text-sm text-neutral-500">78%</div>
+        </div>
+
+        <!-- 4星 -->
+        <div class="flex items-center gap-3">
+          <div class="w-16 text-sm text-neutral-500">4星</div>
+          <div class="flex-1 h-4 bg-neutral-200 rounded-full overflow-hidden">
+            <div class="h-full bg-secondary rounded-full" style="width: 15%"></div>
+          </div>
+          <div class="w-12 text-right text-sm text-neutral-500">15%</div>
+        </div>
+
+        <!-- 3星 -->
+        <div class="flex items-center gap-3">
+          <div class="w-16 text-sm text-neutral-500">3星</div>
+          <div class="flex-1 h-4 bg-neutral-200 rounded-full overflow-hidden">
+            <div class="h-full bg-secondary rounded-full" style="width: 5%"></div>
+          </div>
+          <div class="w-12 text-right text-sm text-neutral-500">5%</div>
+        </div>
+
+        <!-- 2星 -->
+        <div class="flex items-center gap-3">
+          <div class="w-16 text-sm text-neutral-500">2星</div>
+          <div class="flex-1 h-4 bg-neutral-200 rounded-full overflow-hidden">
+            <div class="h-full bg-secondary rounded-full" style="width: 1%"></div>
+          </div>
+          <div class="w-12 text-right text-sm text-neutral-500">1%</div>
+        </div>
+
+        <!-- 1星 -->
+        <div class="flex items-center gap-3">
+          <div class="w-16 text-sm text-neutral-500">1星</div>
+          <div class="flex-1 h-4 bg-neutral-200 rounded-full overflow-hidden">
+            <div class="h-full bg-secondary rounded-full" style="width: 1%"></div>
+          </div>
+          <div class="w-12 text-right text-sm text-neutral-500">1%</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 评价筛选和列表 -->
+  <section class="bg-white p-6 rounded-xl shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+      <h2 class="text-xl font-bold text-neutral-700">用户评价 (128)</h2>
+
+      <div class="flex flex-wrap gap-3">
+        <!-- 评价类型筛选 -->
+        <div class="relative">
+          <button id="ratingFilterBtn" class="flex items-center gap-2 bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg hover:bg-neutral-200 transition-colors">
+            <i class="fa fa-star rating-stars"></i>
+            <span>全部评价</span>
+            <i class="fa fa-chevron-down text-xs"></i>
+          </button>
+          <div id="ratingFilterMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden z-10">
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-rating="all">全部评价</a>
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-rating="5">5星</a>
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-rating="4">4星</a>
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-rating="3">3星</a>
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-rating="2">2星</a>
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-rating="1">1星</a>
+          </div>
+        </div>
+
+        <!-- 有图评价筛选 -->
+        <button class="flex items-center gap-2 bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg hover:bg-neutral-200 transition-colors">
+          <i class="fa fa-picture-o"></i>
+          <span>有图评价</span>
+        </button>
+
+        <!-- 时间排序（卖家视角可见） -->
+        <div id="sortByTime" class="relative hidden">
+          <button id="sortFilterBtn" class="flex items-center gap-2 bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg hover:bg-neutral-200 transition-colors">
+            <i class="fa fa-clock-o"></i>
+            <span>时间排序</span>
+            <i class="fa fa-chevron-down text-xs"></i>
+          </button>
+          <div id="sortFilterMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden z-10">
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-sort="newest">最新优先</a>
+            <a href="#" class="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100" data-sort="oldest">最早优先</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评价列表 -->
+    <div class="space-y-6">
+      <!-- 评价1 -->
+      <div class="border-b border-neutral-100 pb-6 card-hover">
+        <div class="flex flex-col md:flex-row md:items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+            <i class="fa fa-user text-neutral-400"></i>
+          </div>
+
+          <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+              <div>
+                <h4 class="font-medium text-neutral-700">李先生</h4>
+                <div class="flex mt-1">
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                </div>
+              </div>
+              <p class="text-neutral-500 text-sm mt-1 md:mt-0">2023-05-18 14:30</p>
+            </div>
+
+            <p class="text-neutral-700 mb-4">商品质量非常好，和描述的一致，物流也很快，客服态度很好，有问必答，非常满意的一次购物体验，推荐购买！</p>
+
+            <div class="flex gap-2 mb-4">
+              <img src="https://picsum.photos/120/120?random=1" alt="用户上传的商品图片1" class="w-20 h-20 object-cover rounded-md">
+              <img src="https://picsum.photos/120/120?random=2" alt="用户上传的商品图片2" class="w-20 h-20 object-cover rounded-md">
+            </div>
+
+            <!-- 卖家回复（卖家视角可见） -->
+            <div class="seller-reply hidden bg-neutral-50 p-3 rounded-lg">
+              <p class="text-sm text-neutral-600"><span class="font-medium text-primary">卖家回复：</span>感谢您的好评和认可，您的满意是我们最大的动力，期待您的再次光临！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 评价2 -->
+      <div class="border-b border-neutral-100 pb-6 card-hover">
+        <div class="flex flex-col md:flex-row md:items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+            <i class="fa fa-user text-neutral-400"></i>
+          </div>
+
+          <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+              <div>
+                <h4 class="font-medium text-neutral-700">王女士</h4>
+                <div class="flex mt-1">
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star-o rating-stars"></i>
+                </div>
+              </div>
+              <p class="text-neutral-500 text-sm mt-1 md:mt-0">2023-05-15 09:45</p>
+            </div>
+
+            <p class="text-neutral-700 mb-4">东西还不错，就是物流稍微慢了一点，其他都还好，给个四星吧。</p>
+
+            <!-- 卖家回复（卖家视角可见） -->
+            <div class="seller-reply hidden bg-neutral-50 p-3 rounded-lg">
+              <p class="text-sm text-neutral-600"><span class="font-medium text-primary">卖家回复：</span>感谢您的评价，对于物流延迟我们深表歉意，我们会加强物流合作管理，提升配送效率，期待您的再次光临！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 评价3 -->
+      <div class="border-b border-neutral-100 pb-6 card-hover">
+        <div class="flex flex-col md:flex-row md:items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+            <i class="fa fa-user text-neutral-400"></i>
+          </div>
+
+          <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+              <div>
+                <h4 class="font-medium text-neutral-700">张先生</h4>
+                <div class="flex mt-1">
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star-o rating-stars"></i>
+                  <i class="fa fa-star-o rating-stars"></i>
+                </div>
+              </div>
+              <p class="text-neutral-500 text-sm mt-1 md:mt-0">2023-05-10 16:20</p>
+            </div>
+
+            <p class="text-neutral-700 mb-4">商品和预期有点差距，有些小瑕疵，联系客服后处理还算及时，希望以后能改进品控。</p>
+
+            <div class="flex gap-2 mb-4">
+              <img src="https://picsum.photos/120/120?random=3" alt="用户上传的商品问题图片" class="w-20 h-20 object-cover rounded-md">
+            </div>
+
+            <!-- 卖家回复（卖家视角可见） -->
+            <div class="seller-reply hidden bg-neutral-50 p-3 rounded-lg">
+              <p class="text-sm text-neutral-600"><span class="font-medium text-primary">卖家回复：</span>非常抱歉给您带来不好的体验，我们已经加强了品控管理，对于您反馈的问题我们高度重视，已安排客服为您提供进一步的解决方案。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 评价4 -->
+      <div class="card-hover">
+        <div class="flex flex-col md:flex-row md:items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+            <i class="fa fa-user text-neutral-400"></i>
+          </div>
+
+          <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+              <div>
+                <h4 class="font-medium text-neutral-700">赵女士</h4>
+                <div class="flex mt-1">
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star rating-stars"></i>
+                  <i class="fa fa-star-half-o rating-stars"></i>
+                </div>
+              </div>
+              <p class="text-neutral-500 text-sm mt-1 md:mt-0">2023-05-05 11:10</p>
+            </div>
+
+            <p class="text-neutral-700 mb-4">总体来说很满意，价格合理，质量也不错，客服响应很快，解答了我很多疑问，值得购买。</p>
+
+            <!-- 卖家回复（卖家视角可见） -->
+            <div class="seller-reply hidden bg-neutral-50 p-3 rounded-lg">
+              <p class="text-sm text-neutral-600"><span class="font-medium text-primary">卖家回复：</span>感谢您的认可，我们会继续努力提供更优质的商品和服务，期待您的再次光临！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div class="mt-8 flex justify-center">
+      <nav class="flex items-center gap-2">
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:border-primary hover:text-primary transition-colors">
+          <i class="fa fa-chevron-left"></i>
+        </a>
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white">1</a>
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 hover:border-primary hover:text-primary transition-colors">2</a>
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 hover:border-primary hover:text-primary transition-colors">3</a>
+        <span class="text-neutral-500">...</span>
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-700 hover:border-primary hover:text-primary transition-colors">13</a>
+        <a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:border-primary hover:text-primary transition-colors">
+          <i class="fa fa-chevron-right"></i>
+        </a>
+      </nav>
+    </div>
+  </section>
+</main>
+
+<footer class="bg-white border-t border-neutral-200 mt-12 py-8">
+  <div class="container mx-auto px-4">
+    <div class="text-center text-neutral-500 text-sm">
+      <p>© 2025 评价查询系统 版权所有</p>
+      <p class="mt-2">本系统仅用于展示卖家评价信息，不代表官方观点</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 角色切换功能
+  const roleToggle = document.getElementById('roleToggle');
+  const roleMenu = document.getElementById('roleMenu');
+  const roleText = roleToggle.querySelector('span');
+  const sortByTime = document.getElementById('sortByTime');
+  const sellerReplies = document.querySelectorAll('.seller-reply');
+  const sellerSearch = document.getElementById('sellerSearch');
+
+  // 点击角色切换按钮显示/隐藏菜单
+  roleToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    roleMenu.classList.toggle('hidden');
+  });
+
+  // 点击菜单项切换角色
+  roleMenu.querySelectorAll('a').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const role = item.getAttribute('data-role');
+
+      // 更新按钮文本
+      roleText.textContent = role === 'buyer' ? '买家视角' : '卖家视角';
+
+      // 切换卖家视角特有的元素
+      if (role === 'seller') {
+        sortByTime.classList.remove('hidden');
+        sellerReplies.forEach(reply => reply.classList.remove('hidden'));
+        sellerSearch.classList.add('hidden');
+      } else {
+        sortByTime.classList.add('hidden');
+        sellerReplies.forEach(reply => reply.classList.add('hidden'));
+        sellerSearch.classList.remove('hidden');
+      }
+
+      // 隐藏菜单
+      roleMenu.classList.add('hidden');
+    });
+  });
+
+  // 点击页面其他地方隐藏菜单
+  document.addEventListener('click', () => {
+    roleMenu.classList.add('hidden');
+    ratingFilterMenu.classList.add('hidden');
+    sortFilterMenu.classList.add('hidden');
+  });
+
+  // 评分筛选功能
+  const ratingFilterBtn = document.getElementById('ratingFilterBtn');
+  const ratingFilterMenu = document.getElementById('ratingFilterMenu');
+  const ratingFilterText = ratingFilterBtn.querySelector('span');
+
+  ratingFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    ratingFilterMenu.classList.toggle('hidden');
+  });
+
+  ratingFilterMenu.querySelectorAll('a').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const rating = item.getAttribute('data-rating');
+
+      // 更新按钮文本
+      ratingFilterText.textContent = rating === 'all' ? '全部评价' : `${rating}星`;
+
+      // 隐藏菜单
+      ratingFilterMenu.classList.add('hidden');
+
+      // 这里可以添加筛选评价的逻辑
+    });
+  });
+
+  // 排序筛选功能
+  const sortFilterBtn = document.getElementById('sortFilterBtn');
+  const sortFilterMenu = document.getElementById('sortFilterMenu');
+  const sortFilterText = sortFilterBtn.querySelector('span');
+
+  sortFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sortFilterMenu.classList.toggle('hidden');
+  });
+
+  sortFilterMenu.querySelectorAll('a').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const sort = item.getAttribute('data-sort');
+
+      // 更新按钮文本
+      sortFilterText.textContent = sort === 'newest' ? '最新优先' : '最早优先';
+
+      // 隐藏菜单
+      sortFilterMenu.classList.add('hidden');
+
+      // 这里可以添加排序评价的逻辑
+    });
+  });
+
+  // 滚动时改变导航栏样式
+  window.addEventListener('scroll', () => {
+    const header = document.querySelector('header');
+    if (window.scrollY > 10) {
+      header.classList.add('py-2', 'shadow');
+      header.classList.remove('py-4', 'shadow-sm');
+    } else {
+      header.classList.add('py-4', 'shadow-sm');
+      header.classList.remove('py-2', 'shadow');
+    }
+  });
+</script>
+</body>
+</html>

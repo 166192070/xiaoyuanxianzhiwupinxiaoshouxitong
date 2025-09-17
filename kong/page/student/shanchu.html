@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            danger: '#F53F3F',
+            warning: '#FF7D00',
+            success: '#00B42A',
+            gray: {
+              100: '#F2F3F5',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+              700: '#1D2129',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .transition-all-300 {
+        transition: all 300ms ease-in-out;
+      }
+      .shadow-hover {
+        @apply transition-all-300 hover:shadow-lg;
+      }
+      .btn-effect {
+        @apply transition-all-300 transform hover:-translate-y-0.5 active:translate-y-0;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-inter text-gray-700 min-h-screen flex flex-col">
+<!-- 顶部导航 -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <i class="fa fa-users text-primary text-2xl"></i>
+      <h1 class="text-xl font-bold text-gray-700">用户管理系统</h1>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <div class="text-sm text-gray-500">
+        <span class="font-medium">超级管理员</span>
+        <i class="fa fa-shield text-primary ml-1"></i>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+        <i class="fa fa-user"></i>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- 主内容区 -->
+<main class="flex-grow container mx-auto px-4 py-6">
+  <!-- 页面标题和操作区 -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+    <div>
+      <h2 class="text-[clamp(1.25rem,3vw,1.75rem)] font-bold text-gray-700">用户列表</h2>
+      <p class="text-gray-500 mt-1">管理系统用户，包括查看、删除和禁用操作</p>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <div class="relative">
+        <input type="text" placeholder="搜索用户..."
+               class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary w-full md:w-64">
+        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+      </div>
+
+      <button class="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 btn-effect">
+        <i class="fa fa-plus"></i>
+        <span>新增用户</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 筛选器 -->
+  <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+    <div class="flex flex-wrap gap-4">
+      <div>
+        <label class="block text-sm text-gray-500 mb-1">用户状态</label>
+        <select class="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+          <option value="all">全部状态</option>
+          <option value="active">正常</option>
+          <option value="disabled">已禁用</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-500 mb-1">用户类型</label>
+        <select class="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+          <option value="all">全部类型</option>
+          <option value="admin">管理员</option>
+          <option value="user">普通用户</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-500 mb-1">物品状态</label>
+        <select class="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+          <option value="all">全部</option>
+          <option value="has_items">有发布物品</option>
+          <option value="no_items">无发布物品</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-500 mb-1">交易记录</label>
+        <select class="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+          <option value="all">全部</option>
+          <option value="has_transactions">有交易记录</option>
+          <option value="no_transactions">无交易记录</option>
+        </select>
+      </div>
+
+      <div class="self-end">
+        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg btn-effect">
+          重置筛选
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用户列表 -->
+  <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          用户信息
+        </th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          物品状态
+        </th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          交易记录
+        </th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          账号状态
+        </th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          操作
+        </th>
+      </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+      <!-- 用户1：无物品，无交易记录 -->
+      <tr class="hover:bg-gray-50 transition-all-300">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <i class="fa fa-user"></i>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-700">张三</div>
+              <div class="text-sm text-gray-500">zhangsan@example.com</div>
+              <div class="text-xs text-gray-400">普通用户</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">未发布任何物品</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">无交易记录</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">
+                                正常
+                            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div class="flex space-x-2">
+            <button class="text-primary hover:text-primary/80 btn-effect" title="编辑">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button class="text-danger hover:text-danger/80 btn-effect delete-btn" data-user="张三" title="删除">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="text-warning hover:text-warning/80 btn-effect disable-btn" data-user="张三" title="禁用">
+              <i class="fa fa-ban"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 用户2：有物品，有交易记录 -->
+      <tr class="hover:bg-gray-50 transition-all-300">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <i class="fa fa-user"></i>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-700">李四</div>
+              <div class="text-sm text-gray-500">lisi@example.com</div>
+              <div class="text-xs text-gray-400">普通用户</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">已发布 5 件物品</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">有 12 条交易记录</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">
+                                正常
+                            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div class="flex space-x-2">
+            <button class="text-primary hover:text-primary/80 btn-effect" title="编辑">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button class="text-gray-300 cursor-not-allowed" title="无法删除（有物品和交易记录）">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="text-warning hover:text-warning/80 btn-effect disable-btn" data-user="李四" title="禁用">
+              <i class="fa fa-ban"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 用户3：有物品，无交易记录 -->
+      <tr class="hover:bg-gray-50 transition-all-300">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <i class="fa fa-user"></i>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-700">王五</div>
+              <div class="text-sm text-gray-500">wangwu@example.com</div>
+              <div class="text-xs text-gray-400">普通用户</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">已发布 2 件物品</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">无交易记录</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-warning/10 text-warning">
+                                已禁用
+                            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div class="flex space-x-2">
+            <button class="text-primary hover:text-primary/80 btn-effect" title="编辑">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button class="text-gray-300 cursor-not-allowed" title="无法删除（有发布物品）">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="text-success hover:text-success/80 btn-effect enable-btn" data-user="王五" title="启用">
+              <i class="fa fa-check-circle"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 用户4：无物品，有交易记录 -->
+      <tr class="hover:bg-gray-50 transition-all-300">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <i class="fa fa-user"></i>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-700">赵六</div>
+              <div class="text-sm text-gray-500">zhaoliu@example.com</div>
+              <div class="text-xs text-gray-400">普通用户</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">未发布任何物品</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">有 3 条交易记录</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">
+                                正常
+                            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div class="flex space-x-2">
+            <button class="text-primary hover:text-primary/80 btn-effect" title="编辑">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button class="text-gray-300 cursor-not-allowed" title="无法删除（有交易记录）">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="text-warning hover:text-warning/80 btn-effect disable-btn" data-user="赵六" title="禁用">
+              <i class="fa fa-ban"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 用户5：管理员账号 -->
+      <tr class="hover:bg-gray-50 transition-all-300">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+              <i class="fa fa-shield"></i>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-700">钱七</div>
+              <div class="text-sm text-gray-500">qianqi@example.com</div>
+              <div class="text-xs text-gray-400">普通管理员</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">未发布任何物品</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-500">无交易记录</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">
+                                正常
+                            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div class="flex space-x-2">
+            <button class="text-primary hover:text-primary/80 btn-effect" title="编辑">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button class="text-danger hover:text-danger/80 btn-effect delete-btn" data-user="钱七" title="删除">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="text-warning hover:text-warning/80 btn-effect disable-btn" data-user="钱七" title="禁用">
+              <i class="fa fa-ban"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- 分页 -->
+    <div class="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+      <div class="flex-1 flex justify-between sm:hidden">
+        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 btn-effect">
+          上一页
+        </a>
+        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 btn-effect">
+          下一页
+        </a>
+      </div>
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            显示第 <span class="font-medium">1</span> 到 <span class="font-medium">5</span> 条，共 <span class="font-medium">24</span> 条记录
+          </p>
+        </div>
+        <div>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 btn-effect">
+              <span class="sr-only">上一页</span>
+              <i class="fa fa-chevron-left text-xs"></i>
+            </a>
+            <a href="#" aria-current="page" class="z-10 bg-primary text-white relative inline-flex items-center px-4 py-2 border border-primary text-sm font-medium btn-effect">
+              1
+            </a>
+            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium btn-effect">
+              2
+            </a>
+            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium btn-effect">
+              3
+            </a>
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+            <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium btn-effect">
+              5
+            </a>
+            <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 btn-effect">
+              <span class="sr-only">下一页</span>
+              <i class="fa fa-chevron-right text-xs"></i>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-white border-t border-gray-200 py-4 mt-6">
+  <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+    <p>© 2023 用户管理系统 - 版权所有</p>
+  </div>
+</footer>
+
+<!-- 删除确认模态框 -->
+<div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-full max-w-md mx-4 transform transition-all-300 scale-95 opacity-0" id="modal-content">
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-lg font-medium text-gray-700" id="delete-modal-title">删除用户</h3>
+        <button id="close-delete-modal" class="text-gray-400 hover:text-gray-500">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="mb-6">
+        <p class="text-gray-500" id="delete-modal-message">
+          确定要删除此用户吗？此操作不可撤销。
+        </p>
+      </div>
+      <div class="flex justify-end space-x-3">
+        <button id="cancel-delete" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 btn-effect">
+          取消
+        </button>
+        <button id="confirm-delete" class="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/90 btn-effect">
+          确认删除
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 禁用确认模态框 -->
+<div id="disable-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-full max-w-md mx-4 transform transition-all-300 scale-95 opacity-0" id="disable-modal-content">
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-lg font-medium text-gray-700" id="disable-modal-title">禁用用户</h3>
+        <button id="close-disable-modal" class="text-gray-400 hover:text-gray-500">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="mb-6">
+        <p class="text-gray-500" id="disable-modal-message">
+          确定要禁用此用户吗？禁用后用户将无法登录系统，但历史数据会被保留。
+        </p>
+      </div>
+      <div class="flex justify-end space-x-3">
+        <button id="cancel-disable" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 btn-effect">
+          取消
+        </button>
+        <button id="confirm-disable" class="px-4 py-2 bg-warning text-white rounded-lg hover:bg-warning/90 btn-effect">
+          确认禁用
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 启用确认模态框 -->
+<div id="enable-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-full max-w-md mx-4 transform transition-all-300 scale-95 opacity-0" id="enable-modal-content">
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-lg font-medium text-gray-700">启用用户</h3>
+        <button id="close-enable-modal" class="text-gray-400 hover:text-gray-500">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="mb-6">
+        <p class="text-gray-500">
+          确定要启用此用户吗？启用后用户将可以重新登录系统。
+        </p>
+      </div>
+      <div class="flex justify-end space-x-3">
+        <button id="cancel-enable" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 btn-effect">
+          取消
+        </button>
+        <button id="confirm-enable" class="px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 btn-effect">
+          确认启用
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 操作成功提示 -->
+<div id="toast" class="fixed top-4 right-4 bg-success text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-all-300 flex items-center space-x-2 z-50">
+  <i class="fa fa-check-circle"></i>
+  <span id="toast-message">操作成功</span>
+</div>
+
+<script>
+  // 当前操作的用户ID
+  let currentUserId = null;
+
+  // DOM 元素
+  const deleteModal = document.getElementById('delete-modal');
+  const deleteModalContent = document.getElementById('modal-content');
+  const deleteModalTitle = document.getElementById('delete-modal-title');
+  const deleteModalMessage = document.getElementById('delete-modal-message');
+  const closeDeleteModal = document.getElementById('close-delete-modal');
+  const cancelDelete = document.getElementById('cancel-delete');
+  const confirmDelete = document.getElementById('confirm-delete');
+
+  const disableModal = document.getElementById('disable-modal');
+  const disableModalContent = document.getElementById('disable-modal-content');
+  const disableModalTitle = document.getElementById('disable-modal-title');
+  const disableModalMessage = document.getElementById('disable-modal-message');
+  const closeDisableModal = document.getElementById('close-disable-modal');
+  const cancelDisable = document.getElementById('cancel-disable');
+  const confirmDisable = document.getElementById('confirm-disable');
+
+  const enableModal = document.getElementById('enable-modal');
+  const enableModalContent = document.getElementById('enable-modal-content');
+  const closeEnableModal = document.getElementById('close-enable-modal');
+  const cancelEnable = document.getElementById('cancel-enable');
+  const confirmEnable = document.getElementById('confirm-enable');
+
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toast-message');
+
+  // 显示模态框的函数
+  function showModal(modal, modalContent) {
+    modal.classList.remove('hidden');
+    // 触发重排，以便动画生效
+    setTimeout(() => {
+      modalContent.classList.remove('scale-95', 'opacity-0');
+      modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+  }
+
+  // 隐藏模态框的函数
+  function hideModal(modal, modalContent) {
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+  }
+
+  // 显示提示消息
+  function showToast(message) {
+    toastMessage.textContent = message;
+    toast.classList.remove('translate-x-full');
+    toast.classList.add('translate-x-0');
+
+    setTimeout(() => {
+      toast.classList.remove('translate-x-0');
+      toast.classList.add('translate-x-full');
+    }, 3000);
+  }
+
+  // 删除用户相关事件
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const userName = this.getAttribute('data-user');
+      currentUserId = this.getAttribute('data-id');
+      deleteModalTitle.textContent = `删除用户: ${userName}`;
+      deleteModalMessage.textContent = `确定要删除用户 "${userName}" 吗？此操作不可撤销。`;
+      showModal(deleteModal, deleteModalContent);
+    });
+  });
+
+  closeDeleteModal.addEventListener('click', () => {
+    hideModal(deleteModal, deleteModalContent);
+  });
+
+  cancelDelete.addEventListener('click', () => {
+    hideModal(deleteModal, deleteModalContent);
+  });
+
+  confirmDelete.addEventListener('click', () => {
+    // 这里是删除用户的逻辑
+    console.log(`删除用户: ${currentUserId}`);
+    hideModal(deleteModal, deleteModalContent);
+    showToast('用户已成功删除');
+
+    // 实际应用中，这里应该调用API删除用户
+    // 然后刷新用户列表
+  });
+
+  // 禁用用户相关事件
+  document.querySelectorAll('.disable-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const userName = this.getAttribute('data-user');
+      currentUserId = this.getAttribute('data-id');
+      disableModalTitle.textContent = `禁用用户: ${userName}`;
+      disableModalMessage.textContent = `确定要禁用用户 "${userName}" 吗？禁用后用户将无法登录系统，但历史数据会被保留。`;
+      showModal(disableModal, disableModalContent);
+    });
+  });
+
+  closeDisableModal.addEventListener('click', () => {
+    hideModal(disableModal, disableModalContent);
+  });
+
+  cancelDisable.addEventListener('click', () => {
+    hideModal(disableModal, disableModalContent);
+  });
+
+  confirmDisable.addEventListener('click', () => {
+    // 这里是禁用用户
+    console.log(`禁用用户: ${currentUserId}`);
+    hideModal(disableModal, disableModalContent);
+    showToast('用户已成功禁用');
+  });
+
+  // 启用用户相关事件
+  document.querySelectorAll('.enable-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const userName = this.getAttribute('data-user');
+      currentUserId = this.getAttribute('data-id');
+      showModal(enableModal, enableModalContent);
+    });
+  });
+
+  closeEnableModal.addEventListener('click', () => {
+    hideModal(enableModal, enableModalContent);
+  });
+
+  cancelEnable.addEventListener('click', () => {
+    hideModal(enableModal, enableModalContent);
+  });
+
+  confirmEnable.addEventListener('click', () => {
+    console.log(`启用用户: ${currentUserId}`);
+    hideModal(enableModal, enableModalContent);
+    showToast('用户已成功启用');
+
+    // 然后刷新用户列表
+  });
+
+  // 点击模态框外部关闭
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) {
+      hideModal(deleteModal, deleteModalContent);
+    }
+  });
+
+  disableModal.addEventListener('click', (e) => {
+    if (e.target === disableModal) {
+      hideModal(disableModal, disableModalContent);
+    }
+  });
+
+  enableModal.addEventListener('click', (e) => {
+    if (e.target === enableModal) {
+      hideModal(enableModal, enableModalContent);
+    }
+  });
+</script>
+</body>
+</html>
+
